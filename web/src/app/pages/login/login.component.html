@@ -1,7 +1,16 @@
 <div class="login-container">
   <div class="card login-card">
-    <h2 class="text-gradient">Welcome Back</h2>
-    <p style="color: var(--color-text-muted); margin-bottom: 2rem;">Sign in to continue</p>
+    <div class="brand-header">
+      <h1 class="motion-text">
+        <span class="word" style="--i:1">RUN</span>
+        <span class="word accent" style="--i:2">'n</span>
+        <span class="word" style="--i:3">EARN</span>
+      </h1>
+      <p class="subtitle">Welcome to the future of movement.</p>
+    </div>
+
+    <!-- <h2 class="text-gradient">Welcome Back</h2> -->
+    <!-- <p style="color: var(--color-text-muted); margin-bottom: 2rem;">Sign in to continue</p> -->
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
       <div class="form-group">
@@ -18,11 +27,12 @@
         {{ errorMsg }}
       </div>
 
-      <button type="submit" class="btn btn-primary" [disabled]="loginForm.invalid || isLoading" style="width: 100%; margin-top: 1rem;">
+      <button type="submit" class="btn btn-primary" [disabled]="loginForm.invalid || isLoading"
+        style="width: 100%; margin-top: 1rem;">
         {{ isLoading ? 'Signing In...' : 'Sign In' }}
       </button>
     </form>
-    
+
     <div style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
       <a routerLink="/register" style="color: var(--color-primary); text-decoration: none;">Create an account</a>
     </div>

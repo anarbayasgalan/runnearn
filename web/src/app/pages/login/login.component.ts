@@ -36,10 +36,10 @@ export class LoginComponent {
       this.auth.login(userName, userPass).subscribe({
         next: (res) => {
           this.isLoading = false;
-          if (res.status === 0) {
+          if (res.responseCode === 0) {
             this.router.navigate(['/dashboard']);
           } else {
-            this.errorMsg = res.desc || 'Login failed';
+            this.errorMsg = res.responseDesc || 'Login failed';
           }
         },
         error: (err) => {

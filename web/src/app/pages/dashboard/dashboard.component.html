@@ -1,28 +1,228 @@
 <div class="container" style="padding-top: 2rem;">
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <!-- Header -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
             <h1 class="text-gradient">Dashboard</h1>
             <button (click)="logout()" class="btn btn-primary"
                 style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-error); color: var(--color-error); box-shadow: none;">
                 Logout
             </button>
         </div>
+    </div>
 
-        <div *ngIf="currentUser(); else loading">
-            <p style="font-size: 1.2rem;">Welcome back!</p>
-            <p style="color: var(--color-text-muted);">Session Token: <code
-                    style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">{{ currentUser().token }}</code>
-            </p>
+    <!-- Loading State -->
+    <div *ngIf="loading()" class="card" style="text-align: center; padding: 3rem;">
+        <div class="spinner"></div>
+        <p style="margin-top: 1rem; color: var(--color-text-muted);">Loading your dashboard...</p>
+    </div>
 
-            <div
-                style="margin-top: 2rem; padding: 1.5rem; background: var(--color-bg-secondary); border-radius: var(--radius-sm);">
-                <h3>Your Stats</h3>
-                <p>Start running to earn!</p>
+    <!-- Error State -->
+    <div *ngIf="error() && !loading()" class="card"
+        style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--color-error);">
+        <p style="color: var(--color-error); margin: 0;">{{ error() }}</p>
+        <button (click)="loadDashboardData()" class="btn btn-primary" style="margin-top: 1rem;">
+            Retry
+        </button>
+    </div>
+
+    <!-- Dashboard Content -->
+    <div *ngIf="!loading() && !error()">
+        <!-- Company Info Card -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <h2 style="margin-bottom: 1.5rem;">Company Information</h2>
+
+            <div style="display: grid; grid-template-columns: auto 1fr; gap: 2rem; align-items: start;">
+                <!-- Company Logo -->
+                <div *ngIf="company()?.picture"
+                    style="width: 120px; height: 120px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid var(--color-border);">
+                    <img [src]="company().picture" alt="Company Logo"
+                        style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+                <div *ngIf="!company()?.picture"
+                    style="width: 120px; height: 120px; border-radius: var(--radius-sm); background: var(--color-bg-secondary); display: flex; align-items: center; justify-content: center; border: 2px solid var(--color-border);">
+                    <span style="font-size: 3rem; color: var(--color-text-muted);">🏢</span>
+                </div>
+
+                <!-- Company Details -->
+                <div>
+                    <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem;">{{ company()?.company || 'No Company Name' }}
+                    </h3>
+                    <p *ngIf="company()?.details" style="color: var(--color-text-muted); margin: 0; line-height: 1.6;">
+                        {{ company().details }}
+                    </p>
+                    <p *ngIf="!company()?.details"
+                        style="color: var(--color-text-muted); margin: 0; font-style: italic;">
+                        No company description provided.
+                    </p>
+                </div>
             </div>
         </div>
 
-        <ng-template #loading>
-            <p>Loading...</p>
-        </ng-template>
+        <!-- Token Management Card -->
+        <div class="card">
+            <h2 style="margin-bottom: 1.5rem;">Token Management</h2>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <!-- Redeem/Check Code Button -->
+                <button (click)="openRedeemModal()" class="btn btn-primary"
+                    style="padding: 1.5rem; height: auto; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 2rem;">🎫</span>
+                    <span style="font-size: 1.1rem; font-weight: 600;">Redeem / Check Code</span>
+                    <span style="font-size: 0.9rem; opacity: 0.8;">Validate and redeem tokens</span>
+                </button>
+
+                <!-- Create Code Button -->
+                <button (click)="openCreateModal()" class="btn btn-primary"
+                    style="padding: 1.5rem; height: auto; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                    <span style="font-size: 2rem;">✨</span>
+                    <span style="font-size: 1.1rem; font-weight: 600;">Create Code</span>
+                    <span style="font-size: 0.9rem; opacity: 0.8;">Generate new tokens</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Redeem Modal -->
+    <div *ngIf="showRedeemModal()" class="modal-overlay" (click)="closeRedeemModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;">Redeem / Check Code</h2>
+                <button (click)="closeRedeemModal()"
+                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-text-muted);">
+                    ×
+                </button>
+            </div>
+
+            <div *ngIf="!redeemResult()">
+                <div class="form-group">
+                    <label for="redeemCode">Enter Token Code</label>
+                    <input type="text" id="redeemCode" [(ngModel)]="redeemCode" placeholder="Enter code here..."
+                        class="form-control">
+                </div>
+
+                <button (click)="redeemToken()" [disabled]="!redeemCode.trim() || tokenLoading()"
+                    class="btn btn-primary" style="width: 100%;">
+                    <span *ngIf="!tokenLoading()">Redeem Code</span>
+                    <span *ngIf="tokenLoading()">Processing...</span>
+                </button>
+            </div>
+
+            <div *ngIf="redeemResult()">
+                <div *ngIf="redeemResult().responseCode === 0"
+                    style="padding: 1.5rem; background: rgba(34, 197, 94, 0.1); border: 1px solid #22c55e; border-radius: var(--radius-sm); text-align: center;">
+                    <span style="font-size: 3rem;">✅</span>
+                    <h3 style="color: #22c55e; margin: 1rem 0 0.5rem 0;">Success!</h3>
+                    <p style="margin: 0; color: var(--color-text-muted);">{{ redeemResult().responseDesc }}</p>
+                </div>
+
+                <div *ngIf="redeemResult().responseCode !== 0"
+                    style="padding: 1.5rem; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--color-error); border-radius: var(--radius-sm); text-align: center;">
+                    <span style="font-size: 3rem;">❌</span>
+                    <h3 style="color: var(--color-error); margin: 1rem 0 0.5rem 0;">Error</h3>
+                    <p style="margin: 0; color: var(--color-text-muted);">{{ redeemResult().responseDesc }}</p>
+                </div>
+
+                <button (click)="closeRedeemModal()" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Token Modal -->
+    <div *ngIf="showCreateModal()" class="modal-overlay" (click)="closeCreateModal()">
+        <div class="modal-content" (click)="$event.stopPropagation()">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="margin: 0;">Create New Token</h2>
+                <button (click)="closeCreateModal()"
+                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--color-text-muted);">
+                    ×
+                </button>
+            </div>
+
+            <div *ngIf="!createdToken()">
+                <p style="color: var(--color-text-muted); margin-bottom: 1.5rem;">
+                    Click the button below to generate a new token code.
+                </p>
+
+                <button (click)="createToken()" [disabled]="tokenLoading()" class="btn btn-primary"
+                    style="width: 100%;">
+                    <span *ngIf="!tokenLoading()">Generate Token</span>
+                    <span *ngIf="tokenLoading()">Generating...</span>
+                </button>
+            </div>
+
+            <div *ngIf="createdToken()">
+                <div *ngIf="createdToken().responseCode === 0"
+                    style="padding: 1.5rem; background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--radius-sm); text-align: center;">
+                    <span style="font-size: 3rem;">🎉</span>
+                    <h3 style="margin: 1rem 0 0.5rem 0;">Token Created!</h3>
+                    <p style="margin: 0 0 1rem 0; color: var(--color-text-muted);">{{ createdToken().responseDesc }}</p>
+
+                    <div
+                        style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: var(--radius-sm); margin-top: 1rem;">
+                        <p style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--color-text-muted);">Your Token:
+                        </p>
+                        <code
+                            style="font-size: 1.2rem; font-weight: 600; color: var(--color-primary); word-break: break-all;">{{
+                            createdToken().token }}</code>
+                    </div>
+                </div>
+
+                <div *ngIf="createdToken().responseCode !== 0"
+                    style="padding: 1.5rem; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--color-error); border-radius: var(--radius-sm); text-align: center;">
+                    <span style="font-size: 3rem;">❌</span>
+                    <h3 style="color: var(--color-error); margin: 1rem 0 0.5rem 0;">Error</h3>
+                    <p style="margin: 0; color: var(--color-text-muted);">{{ createdToken().responseDesc }}</p>
+                </div>
+
+                <button (click)="closeCreateModal()" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+                    Close
+                </button>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+    .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid var(--color-bg-secondary);
+        border-top-color: var(--color-primary);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 1rem;
+    }
+
+    .modal-content {
+        background: var(--color-bg-card);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: 2rem;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+</style>

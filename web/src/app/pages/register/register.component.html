@@ -17,15 +17,23 @@
             <div class="form-group">
                 <label>Account Type</label>
                 <select formControlName="userType" class="input-field">
-                    <option value="USER">User</option>
                     <option value="ADMIN">Admin</option>
-                    <option value="COMPANY">Company</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label>Company Name (Optional)</label>
+                <label>Company Name</label>
                 <input type="text" formControlName="companyName" class="input-field" placeholder="If applicable">
+            </div>
+
+
+            <!-- Debug info -->
+            <div style="font-size: 0.8rem; color: #666; margin-bottom: 1rem;">
+                Form Valid: {{ registerForm.valid }}<br>
+                Form Invalid: {{ registerForm.invalid }}<br>
+                Username: {{ registerForm.get('userName')?.valid }}<br>
+                Password: {{ registerForm.get('userPass')?.valid }}<br>
+                Company: {{ registerForm.get('companyName')?.valid }}
             </div>
 
             <div *ngIf="errorMsg" class="error-msg">

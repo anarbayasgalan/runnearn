@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class UserSession {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "session", nullable = false, length = 10000)
     private String session;
 

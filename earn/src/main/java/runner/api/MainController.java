@@ -1,6 +1,8 @@
 package runner.api;
 
 import runner.request.*;
+import runner.db.User;
+import runner.db.Company;
 import runner.service.MainService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +23,21 @@ public class MainController {
     @PostMapping("/login")
     public LoginRes login(@RequestBody LoginReq req) {
         return service.login(req);
+    }
+
+    @GetMapping("/home")
+    public User getCurrentUser() {
+        return service.getCurrentUser();
+    }
+
+    @PostMapping("/updateCompany")
+    public UpdateCompanyRes updateCompany(@RequestBody UpdateCompanyReq req) {
+        return service.updateCompany(req);
+    }
+
+    @GetMapping("/company")
+    public Company getCompany() {
+        return service.getCompany();
     }
 
     @PostMapping("/updateUserCred")

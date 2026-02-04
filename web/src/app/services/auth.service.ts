@@ -8,14 +8,11 @@ import { tap } from 'rxjs/operators';
 })
 export class AuthService {
 
-  // Using signals for modern reactive state
   currentUserSignal = signal<any>(null);
 
   constructor(private api: ApiService, private router: Router) {
-    // On init, check if we have a token (simplified session check)
     const token = localStorage.getItem('auth_token');
     if (token) {
-      // In a real app we'd validate the token here
       this.currentUserSignal.set({ token });
     }
   }
@@ -23,7 +20,7 @@ export class AuthService {
   login(userName: string, userPass: string) {
     return this.api.post<any>('/login', { userName, userPass }).pipe(
       tap(res => {
-        if (res.status === 0 && res.session) {
+        if (res.responseCode === 0 && res.session) {
           this.saveToken(res.session);
         }
       })
@@ -31,10 +28,37 @@ export class AuthService {
   }
 
   register(data: any) {
-    return this.api.post<any>('/registerUser', data);
+    return this.api.post<any>('/registerUser', data).pipe(
+      tap(res => {
+        if (res.responseCode === 0 && res.session) {
+          this.saveToken(res.session);
+        }
+      })
+    );
   }
 
-  // Helper for saving token manually if needed
+  updateCompany(data: any) {
+    const token = localStorage.getItem('auth_token');
+    console.log('UpdateCompany - Token exists:', !!token, 'Token:', token?.substring(0, 20) + '...');
+    return this.api.post<any>('/updateCompany', data);
+  }
+
+  getCurrentUser() {
+    return this.api.get<any>('/home');
+  }
+
+  getCompany() {
+    return this.api.get<any>('/company');
+  }
+
+  createToken(data: any) {
+    return this.api.post<any>('/token/generate', data);
+  }
+
+  redeemToken(data: any) {
+    return this.api.post<any>('/token/redeem', data);
+  }
+
   saveToken(token: string) {
     localStorage.setItem('auth_token', token);
     this.currentUserSignal.set({ token });

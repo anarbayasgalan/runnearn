@@ -18,9 +18,9 @@ public class Company {
     @Column(name = "company", nullable = false, length = 100)
     private String company;
 
-    @Column(name = "picture")
+    @Column(name = "picture", columnDefinition = "TEXT")
     private String picture;
 
-    @Column(name = "details")
+    @Column(name = "details", columnDefinition = "TEXT")
     private String details;
 }

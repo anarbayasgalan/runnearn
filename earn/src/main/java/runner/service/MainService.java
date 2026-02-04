@@ -15,6 +15,7 @@ import java.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class MainService {
@@ -26,6 +27,7 @@ public class MainService {
 
     private static final Logger log = LoggerFactory.getLogger(MainService.class);
 
+    @Transactional
     public RegisterRes registerUser(RegisterReq req) {
         if (!Core.nullOrEmpty(req.getUserName()) && param.findUserByUserName(req.getUserName()) != null) {
             throw new RunnerException(1, "Already user!");
@@ -46,7 +48,15 @@ public class MainService {
 
         log.info("User created: " + req.getUserName());
 
-        return new RegisterRes();
+        // Generate session token for auto-login
+        String token = generateSession(u.getUserId());
+
+        RegisterRes res = new RegisterRes();
+        res.setResponseCode(0);
+        res.setResponseDesc("Registration successful");
+        res.setSession(token);
+        
+        return res;
     }
 
     public LoginRes login(LoginReq req) {
@@ -273,5 +283,46 @@ public class MainService {
 
         byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedTextBase64));
         return new String(decryptedBytes);
+    }
+
+    public User getCurrentUser() {
+        // Get userId from SecurityContext
+        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return param.findUser(userId);
+    }
+
+    public UpdateCompanyRes updateCompany(UpdateCompanyReq req) {
+        UpdateCompanyRes res = new UpdateCompanyRes();
+
+        // Get userId from SecurityContext
+        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        User u = param.findUser(userId);
+        if (u == null) {
+            throw new RunnerException(1, "User not found");
+        }
+
+        Company c = new Company();
+        c.setUserId(userId);
+        c.setCompany(u.getCompanyName());
+        c.setPicture(req.getPicture());
+        c.setDetails(req.getDetails());
+
+        param.updateCompany(c);
+
+        res.setResponseDesc("Company details updated successfully");
+        return res;
+    }
+
+    public Company getCompany() {
+        // Get userId from SecurityContext
+        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        
+        Company company = param.getCompany(userId);
+        if (company == null) {
+            throw new RunnerException(1, "Company not found");
+        }
+        
+        return company;
     }
 }

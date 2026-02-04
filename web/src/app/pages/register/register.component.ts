@@ -24,8 +24,8 @@ export class RegisterComponent {
     this.registerForm = this.fb.group({
       userName: ['', [Validators.required]],
       userPass: ['', [Validators.required, Validators.minLength(6)]],
-      userType: ['USER', [Validators.required]],
-      companyName: ['']
+      userType: [{ value: 'ADMIN', disabled: true }],
+      companyName: ['', [Validators.required]]
     });
   }
 
@@ -34,14 +34,22 @@ export class RegisterComponent {
       this.isLoading = true;
       this.errorMsg = '';
 
-      this.auth.register(this.registerForm.value).subscribe({
+      const registerData = this.registerForm.getRawValue();
+      console.log('Registration data being sent:', registerData);
+
+      // Clear any existing token before registration
+      localStorage.removeItem('auth_token');
+
+      this.auth.register(registerData).subscribe({
         next: (res) => {
           this.isLoading = false;
-          if (res.status === 0) {
-            // Auto login or redirect to login? Let's redirect to login
-            this.router.navigate(['/login']);
+          if (res.responseCode === 0) {
+            // Pass company name to setup page
+            this.router.navigate(['/setup'], {
+              state: { companyName: registerData.companyName }
+            });
           } else {
-            this.errorMsg = res.desc || 'Registration failed';
+            this.errorMsg = res.responseDesc || 'Registration failed';
           }
         },
         error: (err) => {

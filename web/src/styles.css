@@ -1,18 +1,29 @@
 /* Modern Authentic Vibe - Design System */
 :root {
-  /* HSL Color Palette - Deep Dark & Gold/Neon */
-  --color-bg-primary: 240, 10%, 10%;   /* #17171c - Deep Gunmetal */
-  --color-bg-secondary: 240, 10%, 15%; /* #23232a - Lighter Gunmetal */
-  --color-bg-card: 240, 10%, 20%;      /* #2e2e38 - Card Background */
-  
-  --color-primary: 45, 100%, 50%;      /* #ffcc00 - Authentic Gold */
-  --color-primary-glow: 45, 100%, 50%; 
-  
-  --color-text-main: 0, 0%, 100%;      /* #ffffff */
-  --color-text-muted: 240, 5%, 60%;    /* #949499 */
-  
-  --color-success: 145, 80%, 40%;
-  --color-error: 0, 80%, 60%;
+  /* Deep Space Theme - Slate/Blue/Purple hints */
+  --color-bg-primary: 222, 47%, 11%;
+  /* #0f172a - Deep Slate */
+  --color-bg-secondary: 217, 33%, 17%;
+  /* #1e293b - Slate 800 */
+  --color-bg-card: 217, 33%, 17%, 0.7;
+  /* Semi-transparent for glassmorphism */
+
+  --color-primary: 250, 100%, 70%;
+  /* #9f7aea - Modern Purple/Blue (Gemini-esque) */
+  --color-accent: 190, 100%, 50%;
+  /* Cyan for dual-tone effects */
+
+  --color-text-main: 210, 40%, 98%;
+  /* #f8fafc */
+  --color-text-muted: 215, 20%, 65%;
+  /* #94a3b8 */
+
+  --color-success: 150, 100%, 40%;
+  --color-error: 340, 90%, 60%;
+
+  /* Mouse Interaction Variables (updated via JS) */
+  --mouse-x: 50%;
+  --mouse-y: 50%;
 
   /* Spacing */
   --spacing-xs: 0.5rem;
@@ -25,10 +36,10 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 20px;
-  
+
   --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.3);
   --shadow-glow: 0 0 15px hsla(var(--color-primary), 0.3);
-  
+
   /* Typography */
   --font-main: 'Inter', system-ui, -apple-system, sans-serif;
 }
@@ -50,18 +61,21 @@ body {
 }
 
 .card {
-  background-color: hsl(var(--color-bg-card));
+  background-color: hsla(var(--color-bg-secondary), 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
-  box-shadow: var(--shadow-sm);
-  border: 1px solid hsla(0, 0%, 100%, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  border: 1px solid hsla(210, 40%, 98%, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm), var(--shadow-glow);
-  border-color: hsla(var(--color-primary), 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4),
+    0 0 20px hsla(var(--color-primary), 0.2);
+  border-color: hsla(var(--color-primary), 0.5);
 }
 
 .btn {
@@ -79,15 +93,34 @@ body {
 }
 
 .btn-primary {
-  background-color: hsl(var(--color-primary));
+  background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-accent)));
   color: hsl(var(--color-bg-primary));
-  box-shadow: 0 4px 12px hsla(var(--color-primary), 0.4);
+  box-shadow: 0 4px 15px hsla(var(--color-primary), 0.4);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, hsl(var(--color-accent)), hsl(var(--color-primary)));
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.3s ease;
 }
 
 .btn-primary:hover {
-  background-color: hsl(var(--color-primary), 90%, 60%); /* slightly lighter */
-  box-shadow: 0 6px 16px hsla(var(--color-primary), 0.6);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px hsla(var(--color-primary), 0.6);
+}
+
+.btn-primary:hover::before {
+  opacity: 1;
 }
 
 .input-field {
@@ -99,7 +132,8 @@ body {
   color: white;
   font-size: 1rem;
   transition: border-color 0.2s;
-  box-sizing: border-box; /* Fix width issues */
+  box-sizing: border-box;
+  /* Fix width issues */
 }
 
 .input-field:focus {
@@ -108,7 +142,9 @@ body {
   box-shadow: 0 0 0 2px hsla(var(--color-primary), 0.2);
 }
 
-h1, h2, h3 {
+h1,
+h2,
+h3 {
   margin-top: 0;
   font-weight: 700;
   letter-spacing: -0.02em;

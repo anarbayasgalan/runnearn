@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import runner.db.*;
+import runner.exception.RunnerException;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,8 @@ public class ParamService {
     private UserSessionRepository userSessionRepository;
     @Autowired
     private TokenRepository tokenRepository;
+    @Autowired
+    private CompanyRepository companyRepository;
 
     public void createUser(User user) {
         userRepository.save(user);
@@ -53,6 +56,7 @@ public class ParamService {
         return userSessionRepository.findById(session).orElse(null);
     }
 
+    @Transactional
     public void addUserSession(UserSession u) {
         userSessionRepository.save(u);
     }
@@ -74,6 +78,19 @@ public class ParamService {
     @Transactional
     public Token findTokenByTkn(String tkn) {
         return tokenRepository.findByTkn(tkn);
+    }
+
+    public void updateCompany(Company c) {
+        // Upsert: save will insert if not exists, or update if exists
+        companyRepository.save(c);
+    }
+
+    public Company getCompany(String userId) {
+        return companyRepository.findById(userId).orElse(null);
+    }
+    
+    public void createCompany(Company c) {
+        companyRepository.save(c);
     }
 
 }
