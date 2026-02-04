@@ -1,0 +1,28 @@
+<div class="container" style="padding-top: 2rem;">
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+            <h1 class="text-gradient">Dashboard</h1>
+            <button (click)="logout()" class="btn btn-primary"
+                style="background-color: var(--color-bg-secondary); border: 1px solid var(--color-error); color: var(--color-error); box-shadow: none;">
+                Logout
+            </button>
+        </div>
+
+        <div *ngIf="currentUser(); else loading">
+            <p style="font-size: 1.2rem;">Welcome back!</p>
+            <p style="color: var(--color-text-muted);">Session Token: <code
+                    style="background: rgba(255,255,255,0.1); padding: 4px 8px; border-radius: 4px;">{{ currentUser().token }}</code>
+            </p>
+
+            <div
+                style="margin-top: 2rem; padding: 1.5rem; background: var(--color-bg-secondary); border-radius: var(--radius-sm);">
+                <h3>Your Stats</h3>
+                <p>Start running to earn!</p>
+            </div>
+        </div>
+
+        <ng-template #loading>
+            <p>Loading...</p>
+        </ng-template>
+    </div>
+</div>

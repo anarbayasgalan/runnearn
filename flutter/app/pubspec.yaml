@@ -1,0 +1,27 @@
+name: app
+description: "A Flutter Run Tracking App (Strava-like basic version)"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.10.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # iOS style icons
+  cupertino_icons: ^1.0.8
+
+  # Map and location (latest compatible versions)
+  google_maps_flutter: ^2.3.0
+  location: ^8.0.1
+  http: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

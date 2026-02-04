@@ -1,0 +1,46 @@
+<div class="login-container">
+    <div class="card login-card">
+        <h2 class="text-gradient">Join Us</h2>
+        <p style="color: var(--color-text-muted); margin-bottom: 2rem;">Create your authentic account</p>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" formControlName="userName" class="input-field" placeholder="Choose a username">
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" formControlName="userPass" class="input-field" placeholder="Create a password">
+            </div>
+
+            <div class="form-group">
+                <label>Account Type</label>
+                <select formControlName="userType" class="input-field">
+                    <option value="USER">User</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="COMPANY">Company</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Company Name (Optional)</label>
+                <input type="text" formControlName="companyName" class="input-field" placeholder="If applicable">
+            </div>
+
+            <div *ngIf="errorMsg" class="error-msg">
+                {{ errorMsg }}
+            </div>
+
+            <button type="submit" class="btn btn-primary" [disabled]="registerForm.invalid || isLoading"
+                style="width: 100%; margin-top: 1rem;">
+                {{ isLoading ? 'Creating Account...' : 'Sign Up' }}
+            </button>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
+            <a routerLink="/login" style="color: var(--color-primary); text-decoration: none;">Already have an account?
+                Sign in</a>
+        </div>
+    </div>
+</div>

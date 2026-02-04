@@ -1,0 +1,121 @@
+/* Modern Authentic Vibe - Design System */
+:root {
+  /* HSL Color Palette - Deep Dark & Gold/Neon */
+  --color-bg-primary: 240, 10%, 10%;   /* #17171c - Deep Gunmetal */
+  --color-bg-secondary: 240, 10%, 15%; /* #23232a - Lighter Gunmetal */
+  --color-bg-card: 240, 10%, 20%;      /* #2e2e38 - Card Background */
+  
+  --color-primary: 45, 100%, 50%;      /* #ffcc00 - Authentic Gold */
+  --color-primary-glow: 45, 100%, 50%; 
+  
+  --color-text-main: 0, 0%, 100%;      /* #ffffff */
+  --color-text-muted: 240, 5%, 60%;    /* #949499 */
+  
+  --color-success: 145, 80%, 40%;
+  --color-error: 0, 80%, 60%;
+
+  /* Spacing */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 1.5rem;
+  --spacing-lg: 2rem;
+  --spacing-xl: 3rem;
+
+  /* Borders & Shadows */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 15px hsla(var(--color-primary), 0.3);
+  
+  /* Typography */
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  background-color: hsl(var(--color-bg-primary));
+  color: var(--color-text-main);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Utilities */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-sm);
+}
+
+.card {
+  background-color: hsl(var(--color-bg-card));
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid hsla(0, 0%, 100%, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm), var(--shadow-glow);
+  border-color: hsla(var(--color-primary), 0.3);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+}
+
+.btn-primary {
+  background-color: hsl(var(--color-primary));
+  color: hsl(var(--color-bg-primary));
+  box-shadow: 0 4px 12px hsla(var(--color-primary), 0.4);
+}
+
+.btn-primary:hover {
+  background-color: hsl(var(--color-primary), 90%, 60%); /* slightly lighter */
+  box-shadow: 0 6px 16px hsla(var(--color-primary), 0.6);
+  transform: translateY(-1px);
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.8rem;
+  background-color: hsl(var(--color-bg-secondary));
+  border: 1px solid hsla(0, 0%, 100%, 0.1);
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  box-sizing: border-box; /* Fix width issues */
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: hsl(var(--color-primary));
+  box-shadow: 0 0 0 2px hsla(var(--color-primary), 0.2);
+}
+
+h1, h2, h3 {
+  margin-top: 0;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, hsl(var(--color-primary)) 0%, #ffffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
