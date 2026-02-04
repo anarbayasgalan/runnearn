@@ -84,7 +84,7 @@ import { Router } from '@angular/router';
     }
     .form-group { margin-bottom: 1.5rem; }
     label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: hsl(var(--color-text-main)); }
-    .input-field { width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; background: white; }
+    .input-field { width: 100%; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; background: white; color: #1e293b; }
     .error-msg { color: hsl(var(--color-error)); background: hsla(var(--color-error), 0.1); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 1rem; }
   `]
 })

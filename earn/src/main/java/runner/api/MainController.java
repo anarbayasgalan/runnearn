@@ -30,6 +30,11 @@ public class MainController {
         return service.getCurrentUser();
     }
 
+    @GetMapping("/me")
+    public User getMe() {
+        return service.getCurrentUser();
+    }
+
     @PostMapping("/updateCompany")
     public UpdateCompanyRes updateCompany(@RequestBody UpdateCompanyReq req) {
         return service.updateCompany(req);

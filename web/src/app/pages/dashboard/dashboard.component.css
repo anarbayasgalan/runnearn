@@ -1,0 +1,15 @@
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: white;
+    color: #1e293b;
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: hsl(var(--color-primary));
+    box-shadow: 0 0 0 2px hsla(var(--color-primary), 0.2);
+}
