@@ -9,14 +9,11 @@
             </button>
         </div>
     </div>
-
-    <!-- Loading State -->
     <div *ngIf="loading()" class="card" style="text-align: center; padding: 3rem;">
         <div class="spinner"></div>
         <p style="margin-top: 1rem; color: var(--color-text-muted);">Loading your dashboard...</p>
     </div>
 
-    <!-- Error State -->
     <div *ngIf="error() && !loading()" class="card"
         style="background: rgba(239, 68, 68, 0.1); border: 1px solid var(--color-error);">
         <p style="color: var(--color-error); margin: 0;">{{ error() }}</p>
@@ -25,14 +22,11 @@
         </button>
     </div>
 
-    <!-- Dashboard Content -->
     <div *ngIf="!loading() && !error()">
-        <!-- Company Info Card -->
         <div class="card" style="margin-bottom: 1.5rem;">
             <h2 style="margin-bottom: 1.5rem;">Company Information</h2>
 
             <div style="display: grid; grid-template-columns: auto 1fr; gap: 2rem; align-items: start;">
-                <!-- Company Logo -->
                 <div *ngIf="company()?.picture"
                     style="width: 120px; height: 120px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid var(--color-border);">
                     <img [src]="company().picture" alt="Company Logo"
@@ -43,7 +37,6 @@
                     <span style="font-size: 3rem; color: var(--color-text-muted);">🏢</span>
                 </div>
 
-                <!-- Company Details -->
                 <div>
                     <h3 style="margin: 0 0 0.5rem 0; font-size: 1.5rem;">{{ company()?.company || 'No Company Name' }}
                     </h3>
@@ -58,12 +51,10 @@
             </div>
         </div>
 
-        <!-- Token Management Card -->
         <div class="card">
             <h2 style="margin-bottom: 1.5rem;">Token Management</h2>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                <!-- Redeem/Check Code Button -->
                 <button (click)="openRedeemModal()" class="btn btn-primary"
                     style="padding: 1.5rem; height: auto; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
                     <span style="font-size: 2rem;">🎫</span>
@@ -71,7 +62,6 @@
                     <span style="font-size: 0.9rem; opacity: 0.8;">Validate and redeem tokens</span>
                 </button>
 
-                <!-- Create Code Button -->
                 <button (click)="openCreateModal()" class="btn btn-primary"
                     style="padding: 1.5rem; height: auto; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
                     <span style="font-size: 2rem;">✨</span>
@@ -82,7 +72,6 @@
         </div>
     </div>
 
-    <!-- Redeem Modal -->
     <div *ngIf="showRedeemModal()" class="modal-overlay" (click)="closeRedeemModal()">
         <div class="modal-content" (click)="$event.stopPropagation()">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
@@ -128,8 +117,6 @@
             </div>
         </div>
     </div>
-
-    <!-- Create Token Modal -->
     <div *ngIf="showCreateModal()" class="modal-overlay" (click)="closeCreateModal()">
         <div class="modal-content" (click)="$event.stopPropagation()">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">

@@ -107,7 +107,6 @@ export class SetupProfileComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Get company name from router state (passed from registration page)
     const state = window.history.state;
     if (state && state['companyName']) {
       this.setupForm.patchValue({
@@ -122,7 +121,7 @@ export class SetupProfileComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = () => {
         this.previewUrl = reader.result as string;
-        this.base64Image = this.previewUrl; // Assuming small images for now, fitting into TEXT column
+        this.base64Image = this.previewUrl;
       };
       reader.readAsDataURL(file);
     }

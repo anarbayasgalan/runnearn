@@ -24,7 +24,6 @@ export class AppComponent {
       const x = event.clientX;
       const y = event.clientY;
 
-      // Update CSS variables on the host element
       this.el.nativeElement.style.setProperty('--mouse-x', `${x}px`);
       this.el.nativeElement.style.setProperty('--mouse-y', `${y}px`);
     }

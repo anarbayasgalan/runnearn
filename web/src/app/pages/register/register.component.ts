@@ -37,14 +37,12 @@ export class RegisterComponent {
       const registerData = this.registerForm.getRawValue();
       console.log('Registration data being sent:', registerData);
 
-      // Clear any existing token before registration
       localStorage.removeItem('auth_token');
 
       this.auth.register(registerData).subscribe({
         next: (res) => {
           this.isLoading = false;
           if (res.responseCode === 0) {
-            // Pass company name to setup page
             this.router.navigate(['/setup'], {
               state: { companyName: registerData.companyName }
             });

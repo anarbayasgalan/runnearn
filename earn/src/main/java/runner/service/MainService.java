@@ -129,7 +129,6 @@ public class MainService {
         p.setId(pk);
 
         // check password is common? or length?
-
         p.setUserPass(passwordEncoder.encode(req.getUserPass()));
         param.createUserCred(p);
 

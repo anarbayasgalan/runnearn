@@ -6,7 +6,6 @@
     height: 100vh;
     z-index: -1;
     background-color: hsl(var(--color-bg-primary));
-    /* Subtle mesh gradient for light mode */
     background-image:
         radial-gradient(circle at var(--mouse-x) var(--mouse-y),
             hsla(var(--color-primary), 0.08) 0%,
@@ -14,7 +13,6 @@
     transition: background-image 0.1s ease;
 }
 
-/* Subtle grain reduced for light mode */
 .interactive-bg::after {
     content: "";
     position: absolute;
