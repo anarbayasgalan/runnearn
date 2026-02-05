@@ -15,6 +15,7 @@ export class LoginComponent {
   loginForm: FormGroup;
   errorMsg = '';
   isLoading = false;
+  gradientStyle = '';
 
   constructor(
     private fb: FormBuilder,
@@ -25,6 +26,21 @@ export class LoginComponent {
       userName: ['', [Validators.required]],
       userPass: ['', [Validators.required]]
     });
+  }
+
+  onMouseMove(event: MouseEvent) {
+    const x = (event.clientX / window.innerWidth) * 100;
+    const y = (event.clientY / window.innerHeight) * 100;
+
+    this.gradientStyle = `
+      radial-gradient(
+        circle at ${x}% ${y}%,
+        rgba(159, 122, 234, 0.15) 0%,
+        rgba(99, 102, 241, 0.1) 25%,
+        rgba(168, 85, 247, 0.08) 50%,
+        transparent 70%
+      )
+    `;
   }
 
   onSubmit() {

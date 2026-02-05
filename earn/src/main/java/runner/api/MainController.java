@@ -3,6 +3,7 @@ package runner.api;
 import runner.request.*;
 import runner.db.User;
 import runner.db.Company;
+import runner.db.Token;
 import runner.service.MainService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -68,5 +69,10 @@ public class MainController {
         } catch (Exception e) {
             throw new RuntimeException("Failed to get public key", e);
         }
+    }
+
+    @GetMapping("/tokens")
+    public java.util.List<Token> getTokens() {
+        return service.getTokens();
     }
 }

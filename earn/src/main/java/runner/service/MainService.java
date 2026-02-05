@@ -55,7 +55,7 @@ public class MainService {
         res.setResponseCode(0);
         res.setResponseDesc("Registration successful");
         res.setSession(token);
-        
+
         return res;
     }
 
@@ -171,22 +171,38 @@ public class MainService {
 
             UserCred cred = param.getUserCred(pk);
             if (cred != null && passwordEncoder.matches(req.getUserPass(), cred.getUserPass())) {
-                // 3. Generate secure One time token(OTT)
-                String tkn = generateOtt(25);
+                // 3. Determine quantity (default to 1 if not provided)
+                int quantity = (req.getQuantity() != null && req.getQuantity() > 0) ? req.getQuantity() : 1;
 
-                // 4. Save token
-                Token token = new Token();
-                token.setUserId(u.getUserId());
-                token.setTkn(tkn);
-                token.setStatus(1);
-                token.setCompanyName(u.getCompanyName());
-                token.setCreatedDate(Core.getNow());
-                token.setExpireDate(req.getExpireDate());
-                token.setPrice(req.getPrice());
-                token.setChallenge(req.getChallenge());
-                param.addToken(token);
+                // Limit max quantity to 100 for safety
+                if (quantity > 100) {
+                    throw new RunnerException(4, "Maximum 100 tokens can be created at once");
+                }
 
-                res.setResponseDesc("Successfully created token");
+                // 4. Generate multiple tokens
+                java.util.List<String> tokenCodes = new java.util.ArrayList<>();
+
+                for (int i = 0; i < quantity; i++) {
+                    // Generate secure One time token(OTT)
+                    String tkn = generateOtt(25);
+
+                    // Save token
+                    Token token = new Token();
+                    token.setUserId(u.getUserId());
+                    token.setTkn(tkn);
+                    token.setStatus(1);
+                    token.setCompanyName(u.getCompanyName());
+                    token.setCreatedDate(Core.getNow());
+                    token.setExpireDate(req.getExpireDate());
+                    token.setPrice(req.getPrice());
+                    token.setChallenge(req.getChallenge());
+                    param.addToken(token);
+
+                    tokenCodes.add(tkn);
+                }
+
+                res.setTokens(tokenCodes);
+                res.setResponseDesc("Successfully created " + quantity + " token" + (quantity > 1 ? "s" : ""));
             } else {
                 throw new RunnerException(3, "Incorrect password!");
             }
@@ -238,6 +254,7 @@ public class MainService {
                             || Core.equal(t.getStatus(), 1)) {
                         // 4. successfully redeemed.
                         t.setStatus(0);
+                        t.setRedeemedDate(Core.getNow());
                         param.updateToken(t);
                         res.setResponseDesc("Token is successfully redeemed.");
                     } else {
@@ -258,8 +275,7 @@ public class MainService {
         return res;
     }
 
-
-    //need this for security for request responses
+    // need this for security for request responses
     public PublicKey getPublicKey() throws NoSuchAlgorithmException {
 
         KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
@@ -316,12 +332,24 @@ public class MainService {
     public Company getCompany() {
         // Get userId from SecurityContext
         String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        
+
         Company company = param.getCompany(userId);
         if (company == null) {
             throw new RunnerException(1, "Company not found");
         }
-        
+
         return company;
+    }
+
+    public java.util.List<Token> getTokens() {
+        // Get userId from SecurityContext
+        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        User u = param.findUser(userId);
+        if (u == null || Core.nullOrEmpty(u.getCompanyName())) {
+            throw new RunnerException(1, "User or company not found");
+        }
+
+        return param.getTokensByCompany(u.getCompanyName());
     }
 }

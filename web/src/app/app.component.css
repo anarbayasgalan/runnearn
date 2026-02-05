@@ -5,11 +5,7 @@
     width: 100vw;
     height: 100vh;
     z-index: -1;
-    background-color: hsl(var(--color-bg-primary));
-    background-image:
-        radial-gradient(circle at var(--mouse-x) var(--mouse-y),
-            hsla(var(--color-primary), 0.08) 0%,
-            transparent 60%);
+    background-color: white;
     transition: background-image 0.1s ease;
 }
 

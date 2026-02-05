@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import runner.db.Run;
 import runner.request.*;
 import runner.service.MainService;
-import runner.service.RunRepository;
+import runner.repositories.RunRepository;
 
 import java.util.List;
 import java.util.Map;
@@ -22,7 +22,6 @@ public class RunController {
 
     @Autowired
     private ObjectMapper objectMapper;
-
 
     @PostMapping("/run")
     public Run save(@RequestBody Map<String, Object> data) throws JsonProcessingException {

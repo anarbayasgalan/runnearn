@@ -13,4 +13,5 @@ public class GenerateTokenReq {
     LocalDateTime expireDate;
     String price;
     String challenge;
+    Integer quantity;
 }

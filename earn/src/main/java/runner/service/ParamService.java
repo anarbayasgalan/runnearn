@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import runner.db.*;
 import runner.exception.RunnerException;
+import runner.repositories.*;
 
 import java.util.List;
 import java.util.Optional;
@@ -88,9 +89,13 @@ public class ParamService {
     public Company getCompany(String userId) {
         return companyRepository.findById(userId).orElse(null);
     }
-    
+
     public void createCompany(Company c) {
         companyRepository.save(c);
+    }
+
+    public List<Token> getTokensByCompany(String companyName) {
+        return tokenRepository.findByCompanyNameOrderByCreatedDateDesc(companyName);
     }
 
 }

@@ -1,4 +1,6 @@
-<div class="login-container">
+<div class="login-container" (mousemove)="onMouseMove($event)">
+  <div class="gradient-bg" [style.background]="gradientStyle"></div>
+
   <div class="card login-card">
     <div class="brand-header">
       <h1 class="motion-text">

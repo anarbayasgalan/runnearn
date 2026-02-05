@@ -1,22 +1,22 @@
 /* Modern Authentic Vibe - Design System */
 :root {
-  /* Deep Space Theme - Slate/Blue/Purple hints */
-  --color-bg-primary: 222, 47%, 11%;
-  /* #0f172a - Deep Slate */
-  --color-bg-secondary: 217, 33%, 17%;
-  /* #1e293b - Slate 800 */
-  --color-bg-card: 217, 33%, 17%, 0.7;
-  /* Semi-transparent for glassmorphism */
+  /* Clean White Theme */
+  --color-bg-primary: 0, 0%, 100%;
+  /* #ffffff - Pure White */
+  --color-bg-secondary: 0, 0%, 98%;
+  /* #fafafa - Off White */
+  --color-bg-card: 0, 0%, 98%, 0.9;
+  /* Light background for cards */
 
   --color-primary: 250, 100%, 70%;
   /* #9f7aea - Modern Purple/Blue (Gemini-esque) */
   --color-accent: 190, 100%, 50%;
   /* Cyan for dual-tone effects */
 
-  --color-text-main: 210, 40%, 98%;
-  /* #f8fafc */
-  --color-text-muted: 215, 20%, 65%;
-  /* #94a3b8 */
+  --color-text-main: 0, 0%, 13%;
+  /* #222222 - Dark text */
+  --color-text-muted: 0, 0%, 50%;
+  /* #808080 - Gray text */
 
   --color-success: 150, 100%, 40%;
   --color-error: 340, 90%, 60%;
@@ -37,8 +37,9 @@
   --radius-md: 12px;
   --radius-lg: 20px;
 
-  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.3);
-  --shadow-glow: 0 0 15px hsla(var(--color-primary), 0.3);
+  --shadow-sm: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 15px hsla(var(--color-primary), 0.2);
+  --color-border: 0, 0%, 90%;
 
   /* Typography */
   --font-main: 'Inter', system-ui, -apple-system, sans-serif;
@@ -61,21 +62,21 @@ body {
 }
 
 .card {
-  background-color: hsla(var(--color-bg-secondary), 0.6);
+  background-color: white;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: var(--radius-md);
   padding: var(--spacing-md);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-  border: 1px solid hsla(210, 40%, 98%, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid hsl(var(--color-border));
   transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4),
-    0 0 20px hsla(var(--color-primary), 0.2);
-  border-color: hsla(var(--color-primary), 0.5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12),
+    0 0 20px hsla(var(--color-primary), 0.1);
+  border-color: hsla(var(--color-primary), 0.3);
 }
 
 .btn {
@@ -152,6 +153,7 @@ h3 {
 
 .text-gradient {
   background: linear-gradient(135deg, hsl(var(--color-primary)) 0%, #ffffff 100%);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

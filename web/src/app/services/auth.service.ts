@@ -59,6 +59,10 @@ export class AuthService {
     return this.api.post<any>('/token/redeem', data);
   }
 
+  getTokens() {
+    return this.api.get<any[]>('/tokens');
+  }
+
   saveToken(token: string) {
     localStorage.setItem('auth_token', token);
     this.currentUserSignal.set({ token });

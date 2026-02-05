@@ -57,17 +57,125 @@
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
                 <button (click)="openRedeemModal()" class="btn btn-primary"
                     style="padding: 1.5rem; height: auto; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                    <span style="font-size: 2rem;">🎫</span>
                     <span style="font-size: 1.1rem; font-weight: 600;">Redeem / Check Code</span>
                     <span style="font-size: 0.9rem; opacity: 0.8;">Validate and redeem tokens</span>
                 </button>
 
                 <button (click)="openCreateModal()" class="btn btn-primary"
                     style="padding: 1.5rem; height: auto; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                    <span style="font-size: 2rem;">✨</span>
                     <span style="font-size: 1.1rem; font-weight: 600;">Create Code</span>
                     <span style="font-size: 0.9rem; opacity: 0.8;">Generate new tokens</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- Token Lists -->
+        <div class="card" style="margin-top: 2rem;">
+            <h2 style="margin-bottom: 1.5rem;">Token Lists</h2>
+
+            <!-- Active Tokens -->
+            <div style="margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: hsl(var(--color-primary));">Active Tokens ({{
+                    getActiveTokens().length }})</h3>
+
+                <div *ngIf="getActiveTokens().length === 0"
+                    style="text-align: center; padding: 2rem; color: var(--color-text-muted);">
+                    No active tokens yet. Create your first token above!
+                </div>
+
+                <div *ngIf="getActiveTokens().length > 0" style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--color-border); text-align: left;">
+                                <th style="padding: 0.75rem;">Token Code</th>
+                                <th style="padding: 0.75rem;">Price</th>
+                                <th style="padding: 0.75rem;">Challenge</th>
+                                <th style="padding: 0.75rem;">Expiry</th>
+                                <th style="padding: 0.75rem;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let token of getActiveTokens()"
+                                style="border-bottom: 1px solid var(--color-border);">
+                                <td style="padding: 0.75rem;">
+                                    <code
+                                        style="background: var(--color-bg-secondary); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.9rem;">
+                                        {{ token.tkn }}
+                                    </code>
+                                </td>
+                                <td style="padding: 0.75rem;">{{ token.price || 'N/A' }}</td>
+                                <td style="padding: 0.75rem; max-width: 300px;">
+                                    <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        {{ token.challenge || 'N/A' }}
+                                    </div>
+                                </td>
+                                <td style="padding: 0.75rem;">
+                                    <span *ngIf="token.expireDate">
+                                        {{ token.expireDate | date:'MM/dd/yyyy' }}
+                                    </span>
+                                    <span *ngIf="!token.expireDate">No expiry</span>
+                                </td>
+                                <td style="padding: 0.75rem;">
+                                    <span *ngIf="isExpired(token)"
+                                        style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">
+                                        Expired
+                                    </span>
+                                    <span *ngIf="!isExpired(token)"
+                                        style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">
+                                        Active
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Redeemed Tokens -->
+            <div>
+                <h3 style="margin-bottom: 1rem; color: var(--color-text-muted);">Redeemed Tokens ({{
+                    getRedeemedTokens().length }})</h3>
+
+                <div *ngIf="getRedeemedTokens().length === 0"
+                    style="text-align: center; padding: 2rem; color: var(--color-text-muted);">
+                    No redeemed tokens yet.
+                </div>
+
+                <div *ngIf="getRedeemedTokens().length > 0" style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid var(--color-border); text-align: left;">
+                                <th style="padding: 0.75rem;">Token Code</th>
+                                <th style="padding: 0.75rem;">Price</th>
+                                <th style="padding: 0.75rem;">Challenge</th>
+                                <th style="padding: 0.75rem;">Redeemed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let token of getRedeemedTokens()"
+                                style="border-bottom: 1px solid var(--color-border); opacity: 0.7;">
+                                <td style="padding: 0.75rem;">
+                                    <code
+                                        style="background: var(--color-bg-secondary); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.9rem; text-decoration: line-through;">
+                                        {{ token.tkn }}
+                                    </code>
+                                </td>
+                                <td style="padding: 0.75rem;">{{ token.price || 'N/A' }}</td>
+                                <td style="padding: 0.75rem; max-width: 300px;">
+                                    <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        {{ token.challenge || 'N/A' }}
+                                    </div>
+                                </td>
+                                <td style="padding: 0.75rem;">
+                                    <span *ngIf="token.redeemedDate">
+                                        {{ token.redeemedDate | date:'MM/dd/yyyy HH:mm:ss' }}
+                                    </span>
+                                    <span *ngIf="!token.redeemedDate">-</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -89,8 +197,18 @@
                         class="form-control">
                 </div>
 
-                <button (click)="redeemToken()" [disabled]="!redeemCode.trim() || tokenLoading()"
-                    class="btn btn-primary" style="width: 100%;">
+                <div class="form-group">
+                    <label for="redeemPassword">Confirm Password *</label>
+                    <input type="password" id="redeemPassword" [(ngModel)]="redeemPassword"
+                        placeholder="Enter your password" class="form-control" required>
+                    <small style="color: var(--color-text-muted); font-size: 0.85rem;">
+                        Verify your identity to redeem token
+                    </small>
+                </div>
+
+                <button (click)="redeemToken()"
+                    [disabled]="!redeemCode.trim() || !redeemPassword.trim() || tokenLoading()" class="btn btn-primary"
+                    style="width: 100%;">
                     <span *ngIf="!tokenLoading()">Redeem Code</span>
                     <span *ngIf="tokenLoading()">Processing...</span>
                 </button>
@@ -128,31 +246,72 @@
             </div>
 
             <div *ngIf="!createdToken()">
-                <p style="color: var(--color-text-muted); margin-bottom: 1.5rem;">
-                    Click the button below to generate a new token code.
-                </p>
+                <form [formGroup]="tokenForm" (ngSubmit)="createToken()">
+                    <div class="form-group">
+                        <label>Expiry Date</label>
+                        <input type="date" formControlName="expireDate" class="form-control" [min]="getCurrentDate()"
+                            required>
+                        <small style="color: var(--color-text-muted); font-size: 0.85rem;">
+                            When should these tokens expire?
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label>Price/Discount *</label>
+                        <input type="text" formControlName="price" class="form-control" placeholder="e.g., 5% discount"
+                            required>
+                        <small style="color: var(--color-text-muted); font-size: 0.85rem;">
+                            What's the offer? (e.g., "5% discount" or "$10 off")
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label>Challenge/Goal *</label>
+                        <textarea formControlName="challenge" class="form-control" rows="3"
+                            placeholder="e.g., 10km in 4:00 pace" required></textarea>
+                        <small style="color: var(--color-text-muted); font-size: 0.85rem;">
+                            What's the running challenge to complete?
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label>Number of Tokens *</label>
+                        <input type="number" formControlName="quantity" class="form-control" min="1" max="100" required>
+                        <small style="color: var(--color-text-muted); font-size: 0.85rem;">
+                            How many people can redeem this? (Max: 100)
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm Password *</label>
+                        <input type="password" formControlName="userPass" class="form-control"
+                            placeholder="Enter your password" required>
+                        <small style="color: var(--color-text-muted); font-size: 0.85rem;">
+                            Verify your identity to create tokens
+                        </small>
+                    </div>
 
-                <button (click)="createToken()" [disabled]="tokenLoading()" class="btn btn-primary"
-                    style="width: 100%;">
-                    <span *ngIf="!tokenLoading()">Generate Token</span>
-                    <span *ngIf="tokenLoading()">Generating...</span>
-                </button>
+                    <button type="submit" [disabled]="tokenForm.invalid || tokenLoading()" class="btn btn-primary"
+                        style="width: 100%;">
+                        <span *ngIf="!tokenLoading()">Create Tokens</span>
+                        <span *ngIf="tokenLoading()">Creating...</span>
+                    </button>
+                </form>
             </div>
 
             <div *ngIf="createdToken()">
                 <div *ngIf="createdToken().responseCode === 0"
                     style="padding: 1.5rem; background: var(--color-bg-secondary); border: 1px solid var(--color-border); border-radius: var(--radius-sm); text-align: center;">
                     <span style="font-size: 3rem;">🎉</span>
-                    <h3 style="margin: 1rem 0 0.5rem 0;">Token Created!</h3>
+                    <h3 style="margin: 1rem 0 0.5rem 0;">Tokens Created!</h3>
                     <p style="margin: 0 0 1rem 0; color: var(--color-text-muted);">{{ createdToken().responseDesc }}</p>
 
-                    <div
-                        style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: var(--radius-sm); margin-top: 1rem;">
-                        <p style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: var(--color-text-muted);">Your Token:
-                        </p>
-                        <code
-                            style="font-size: 1.2rem; font-weight: 600; color: var(--color-primary); word-break: break-all;">{{
-                            createdToken().token }}</code>
+                    <div *ngIf="createdToken().tokens && createdToken().tokens.length > 0"
+                        style="max-height: 300px; overflow-y: auto; margin-top: 1rem;">
+                        <div *ngFor="let token of createdToken().tokens; let i = index"
+                            style="background: rgba(255,255,255,0.05); padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 0.5rem; text-align: left;">
+                            <p style="margin: 0 0 0.25rem 0; font-size: 0.85rem; color: var(--color-text-muted);">
+                                Token {{ i + 1 }}:
+                            </p>
+                            <code
+                                style="font-size: 1rem; font-weight: 600; color: var(--color-primary); word-break: break-all; display: block;">{{ token }}</code>
+                        </div>
                     </div>
                 </div>
 

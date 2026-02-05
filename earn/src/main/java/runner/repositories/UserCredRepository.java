@@ -1,4 +1,4 @@
-package runner.service;
+package runner.repositories;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import runner.db.UserCred;
