@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router, RouterModule } from '@angular/router';
 
@@ -16,17 +16,29 @@ export class RegisterComponent {
   errorMsg = '';
   isLoading = false;
 
+  passwordMatchValidator(control: AbstractControl): ValidationErrors | null {
+    const password = control.get('userPass');
+    const confirmPassword = control.get('confirmPassword');
+
+    if (!password || !confirmPassword) {
+      return null;
+    }
+
+    return password.value === confirmPassword.value ? null : { passwordMismatch: true };
+  }
+
   constructor(
     private fb: FormBuilder,
     private auth: AuthService,
     private router: Router
   ) {
     this.registerForm = this.fb.group({
-      userName: ['', [Validators.required]],
+      userName: ['', [Validators.required, Validators.email]],
       userPass: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]],
       userType: [{ value: 'ADMIN', disabled: true }],
       companyName: ['', [Validators.required]]
-    });
+    }, { validators: this.passwordMatchValidator });
   }
 
   onSubmit() {
@@ -35,8 +47,6 @@ export class RegisterComponent {
       this.errorMsg = '';
 
       const registerData = this.registerForm.getRawValue();
-      console.log('Registration data being sent:', registerData);
-
       localStorage.removeItem('auth_token');
 
       this.auth.register(registerData).subscribe({

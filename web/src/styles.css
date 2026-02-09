@@ -8,10 +8,10 @@
   --color-bg-card: 0, 0%, 98%, 0.9;
   /* Light background for cards */
 
-  --color-primary: 250, 100%, 70%;
-  /* #9f7aea - Modern Purple/Blue (Gemini-esque) */
-  --color-accent: 190, 100%, 50%;
-  /* Cyan for dual-tone effects */
+  --color-primary: 25, 100%, 50%;
+  /* #FF6B00 - Vibrant Orange */
+  --color-accent: 210, 72%, 52%;
+  /* #2E86DE - Royal Blue */
 
   --color-text-main: 0, 0%, 13%;
   /* #222222 - Dark text */
@@ -130,11 +130,10 @@ body {
   background-color: hsl(var(--color-bg-secondary));
   border: 1px solid hsla(0, 0%, 100%, 0.1);
   border-radius: var(--radius-sm);
-  color: white;
+  color: hsl(var(--color-text-main));
   font-size: 1rem;
   transition: border-color 0.2s;
   box-sizing: border-box;
-  /* Fix width issues */
 }
 
 .input-field:focus {
@@ -156,4 +155,18 @@ h3 {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+}
+
+/* Global Cursor Hiding for Custom Cursor */
+@media (min-width: 769px) {
+
+  body,
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  [role="button"] {
+    cursor: none !important;
+  }
 }

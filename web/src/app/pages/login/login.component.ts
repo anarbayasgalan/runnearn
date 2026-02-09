@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router, RouterModule } from '@angular/router';
+import { InteractiveBackgroundComponent } from '../../components/interactive-background/interactive-background.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, InteractiveBackgroundComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
@@ -35,9 +36,9 @@ export class LoginComponent {
     this.gradientStyle = `
       radial-gradient(
         circle at ${x}% ${y}%,
-        rgba(159, 122, 234, 0.15) 0%,
-        rgba(99, 102, 241, 0.1) 25%,
-        rgba(168, 85, 247, 0.08) 50%,
+        hsla(25, 100%, 50%, 0.15) 0%,
+        hsla(210, 72%, 52%, 0.1) 25%,
+        hsla(25, 100%, 60%, 0.05) 50%,
         transparent 70%
       )
     `;

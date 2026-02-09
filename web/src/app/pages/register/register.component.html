@@ -5,8 +5,12 @@
 
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
             <div class="form-group">
-                <label>Username</label>
+                <label>Username/Email</label>
                 <input type="text" formControlName="userName" class="input-field" placeholder="Choose a username">
+                <div *ngIf="registerForm.get('userName')?.hasError('email') && registerForm.get('userName')?.touched"
+                    style="color: #ef4444; font-size: 0.85rem; margin-top: 0.25rem; font-weight: 500;">
+                    Please enter a valid email address!
+                </div>
             </div>
 
             <div class="form-group">
@@ -15,15 +19,18 @@
             </div>
 
             <div class="form-group">
-                <label>Account Type</label>
-                <select formControlName="userType" class="input-field">
-                    <option value="ADMIN">Admin</option>
-                </select>
+                <label>Repeat Password</label>
+                <input type="password" formControlName="confirmPassword" class="input-field"
+                    placeholder="Repeat password">
+                <div *ngIf="registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched"
+                    style="color: #ef4444; font-size: 0.85rem; margin-top: 0.25rem; font-weight: 500;">
+                    Passwords don't match!
+                </div>
             </div>
 
             <div class="form-group">
                 <label>Company Name</label>
-                <input type="text" formControlName="companyName" class="input-field" placeholder="If applicable">
+                <input type="text" formControlName="companyName" class="input-field">
             </div>
 
             <div style="font-size: 0.8rem; color: #666; margin-bottom: 1rem;">

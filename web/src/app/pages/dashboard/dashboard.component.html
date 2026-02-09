@@ -32,9 +32,9 @@
                     <img [src]="company().picture" alt="Company Logo"
                         style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
-                <div *ngIf="!company()?.picture"
-                    style="width: 120px; height: 120px; border-radius: var(--radius-sm); background: var(--color-bg-secondary); display: flex; align-items: center; justify-content: center; border: 2px solid var(--color-border);">
-                    <span style="font-size: 3rem; color: var(--color-text-muted);">🏢</span>
+                <div *ngIf="!company()?.picture" class="logo-placeholder"
+                    style="width: 120px; height: 120px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 600; color: hsl(var(--color-primary));">
+                    {{ company()?.company?.charAt(0)?.toUpperCase() || 'C' }}
                 </div>
 
                 <div>
@@ -51,17 +51,17 @@
             </div>
         </div>
 
-        <div class="card">
-            <h2 style="margin-bottom: 1.5rem;">Token Management</h2>
+        <div class="card animate-in">
+            <h2 class="section-header">Token Management</h2>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
-                <button (click)="openRedeemModal()" class="btn btn-primary"
+                <button (click)="openRedeemModal()" class="btn btn-primary btn-enhanced"
                     style="padding: 1.5rem; height: auto; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
                     <span style="font-size: 1.1rem; font-weight: 600;">Redeem / Check Code</span>
                     <span style="font-size: 0.9rem; opacity: 0.8;">Validate and redeem tokens</span>
                 </button>
 
-                <button (click)="openCreateModal()" class="btn btn-primary"
+                <button (click)="openCreateModal()" class="btn btn-primary btn-enhanced"
                     style="padding: 1.5rem; height: auto; display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
                     <span style="font-size: 1.1rem; font-weight: 600;">Create Code</span>
                     <span style="font-size: 0.9rem; opacity: 0.8;">Generate new tokens</span>
@@ -70,13 +70,15 @@
         </div>
 
         <!-- Token Lists -->
-        <div class="card" style="margin-top: 2rem;">
-            <h2 style="margin-bottom: 1.5rem;">Token Lists</h2>
+        <div class="card animate-in" style="margin-top: 2rem;">
+            <h2 class="section-header">Your Tokens</h2>
 
             <!-- Active Tokens -->
             <div style="margin-bottom: 2rem;">
-                <h3 style="margin-bottom: 1rem; color: hsl(var(--color-primary));">Active Tokens ({{
-                    getActiveTokens().length }})</h3>
+                <h3
+                    style="margin-bottom: 1rem; font-size: 1.25rem; font-weight: 600; color: hsl(var(--color-primary));">
+                    Active Tokens <span style="opacity: 0.6; font-size: 1rem;">({{ getActiveTokens().length }})</span>
+                </h3>
 
                 <div *ngIf="getActiveTokens().length === 0"
                     style="text-align: center; padding: 2rem; color: var(--color-text-muted);">
@@ -84,7 +86,7 @@
                 </div>
 
                 <div *ngIf="getActiveTokens().length > 0" style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse;">
+                    <table class="token-table" style="width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr style="border-bottom: 2px solid var(--color-border); text-align: left;">
                                 <th style="padding: 0.75rem;">Token Code</th>
@@ -98,8 +100,7 @@
                             <tr *ngFor="let token of getActiveTokens()"
                                 style="border-bottom: 1px solid var(--color-border);">
                                 <td style="padding: 0.75rem;">
-                                    <code
-                                        style="background: var(--color-bg-secondary); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.9rem;">
+                                    <code class="token-code">
                                         {{ token.tkn }}
                                     </code>
                                 </td>
@@ -116,12 +117,10 @@
                                     <span *ngIf="!token.expireDate">No expiry</span>
                                 </td>
                                 <td style="padding: 0.75rem;">
-                                    <span *ngIf="isExpired(token)"
-                                        style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">
+                                    <span *ngIf="isExpired(token)" class="status-badge status-expired">
                                         Expired
                                     </span>
-                                    <span *ngIf="!isExpired(token)"
-                                        style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.85rem;">
+                                    <span *ngIf="!isExpired(token)" class="status-badge status-active">
                                         Active
                                     </span>
                                 </td>
@@ -133,8 +132,9 @@
 
             <!-- Redeemed Tokens -->
             <div>
-                <h3 style="margin-bottom: 1rem; color: var(--color-text-muted);">Redeemed Tokens ({{
-                    getRedeemedTokens().length }})</h3>
+                <h3 style="margin-bottom: 1rem; font-size: 1.25rem; font-weight: 600; color: var(--color-text-muted);">
+                    Redeemed Tokens <span style="opacity: 0.6; font-size: 1rem;">({{ getRedeemedTokens().length
+                        }})</span></h3>
 
                 <div *ngIf="getRedeemedTokens().length === 0"
                     style="text-align: center; padding: 2rem; color: var(--color-text-muted);">
@@ -142,7 +142,7 @@
                 </div>
 
                 <div *ngIf="getRedeemedTokens().length > 0" style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse;">
+                    <table class="token-table" style="width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr style="border-bottom: 2px solid var(--color-border); text-align: left;">
                                 <th style="padding: 0.75rem;">Token Code</th>
@@ -155,8 +155,7 @@
                             <tr *ngFor="let token of getRedeemedTokens()"
                                 style="border-bottom: 1px solid var(--color-border); opacity: 0.7;">
                                 <td style="padding: 0.75rem;">
-                                    <code
-                                        style="background: var(--color-bg-secondary); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.9rem; text-decoration: line-through;">
+                                    <code class="token-code" style="text-decoration: line-through; opacity: 0.7;">
                                         {{ token.tkn }}
                                     </code>
                                 </td>

@@ -352,4 +352,105 @@ public class MainService {
 
         return param.getTokensByCompany(u.getCompanyName());
     }
+
+    private String generateOTP() {
+        java.util.Random random = new java.util.Random();
+        int otp = 100000 + random.nextInt(900000);
+        return String.valueOf(otp);
+    }
+
+    @Transactional
+    public GenericResponse requestPasswordReset(ForgotPasswordRequestReq req) {
+        User u = param.findUserByUserName(req.getUserName());
+        if (u == null) {
+            throw new RunnerException(1, "User not found");
+        }
+
+        String otp = generateOTP();
+        java.time.LocalDateTime expiry = Core.getNow().plusMinutes(10);
+
+        UserCredPK pk = new UserCredPK();
+        pk.setUserName(u.getUserName());
+        pk.setUserId(u.getUserId());
+
+        UserCred cred = param.getUserCred(pk);
+        if (cred == null) {
+            throw new RunnerException(2, "User credentials not found");
+        }
+
+        cred.setOtpCode(otp);
+        cred.setOtpExpiry(expiry);
+        param.updateUserCred(cred);
+
+        log.info("OTP generated for user {}: {}", req.getUserName(), otp);
+        log.info("OTP expires at: {}", expiry);
+
+        GenericResponse res = new GenericResponse();
+        // TODO: send email
+        res.setResponseCode(0);
+        res.setResponseDesc("OTP sent successfully");
+        return res;
+    }
+
+    public GenericResponse verifyOTP(ForgotPasswordVerifyReq req) {
+        User u = param.findUserByUserName(req.getUserName());
+        if (u == null) {
+            throw new RunnerException(1, "User not found");
+        }
+
+        UserCredPK pk = new UserCredPK();
+        pk.setUserName(u.getUserName());
+        pk.setUserId(u.getUserId());
+
+        UserCred cred = param.getUserCred(pk);
+        if (cred == null || cred.getOtpCode() == null) {
+            throw new RunnerException(2, "No OTP found for this user");
+        }
+
+        if (Core.getNow().isAfter(cred.getOtpExpiry())) {
+            throw new RunnerException(3, "OTP has expired");
+        }
+
+        if (!cred.getOtpCode().equals(req.getOtpCode())) {
+            throw new RunnerException(4, "Invalid OTP");
+        }
+
+        GenericResponse res = new GenericResponse();
+        res.setResponseCode(0);
+        res.setResponseDesc("OTP verified successfully");
+        res.setMessage("You can now reset your password");
+        return res;
+    }
+
+    @Transactional
+    public GenericResponse resetPassword(ForgotPasswordResetReq req) {
+        GenericResponse verifyRes = verifyOTP(new ForgotPasswordVerifyReq() {
+            {
+                setUserName(req.getUserName());
+                setOtpCode(req.getOtpCode());
+            }
+        });
+
+        if (verifyRes.getResponseCode() != 0) {
+            return verifyRes;
+        }
+
+        User u = param.findUserByUserName(req.getUserName());
+        UserCredPK pk = new UserCredPK();
+        pk.setUserName(u.getUserName());
+        pk.setUserId(u.getUserId());
+
+        UserCred cred = param.getUserCred(pk);
+        cred.setUserPass(passwordEncoder.encode(req.getNewPassword()));
+        cred.setOtpCode(null);
+        cred.setOtpExpiry(null);
+        param.updateUserCred(cred);
+
+        log.info("Password reset successful for user: {}", req.getUserName());
+
+        GenericResponse res = new GenericResponse();
+        res.setResponseDesc("Password reset successfully");
+        res.setMessage("You can now login with your new password");
+        return res;
+    }
 }

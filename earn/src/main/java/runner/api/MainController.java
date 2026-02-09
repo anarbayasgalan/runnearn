@@ -75,4 +75,19 @@ public class MainController {
     public java.util.List<Token> getTokens() {
         return service.getTokens();
     }
+
+    @PostMapping("/forgot-password/request")
+    public GenericResponse requestPasswordReset(@RequestBody ForgotPasswordRequestReq req) {
+        return service.requestPasswordReset(req);
+    }
+
+    @PostMapping("/forgot-password/verify")
+    public GenericResponse verifyOTP(@RequestBody ForgotPasswordVerifyReq req) {
+        return service.verifyOTP(req);
+    }
+
+    @PostMapping("/forgot-password/reset")
+    public GenericResponse resetPassword(@RequestBody ForgotPasswordResetReq req) {
+        return service.resetPassword(req);
+    }
 }

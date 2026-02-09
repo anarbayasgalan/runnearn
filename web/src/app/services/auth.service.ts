@@ -63,6 +63,18 @@ export class AuthService {
     return this.api.get<any[]>('/tokens');
   }
 
+  requestPasswordReset(data: { userName: string }) {
+    return this.api.post<any>('/forgot-password/request', data);
+  }
+
+  verifyOTP(data: { userName: string; otpCode: string }) {
+    return this.api.post<any>('/forgot-password/verify', data);
+  }
+
+  resetPassword(data: { userName: string; otpCode: string; newPassword: string }) {
+    return this.api.post<any>('/forgot-password/reset', data);
+  }
+
   saveToken(token: string) {
     localStorage.setItem('auth_token', token);
     this.currentUserSignal.set({ token });
