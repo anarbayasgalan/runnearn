@@ -98,4 +98,16 @@ public class ParamService {
         return tokenRepository.findByCompanyNameOrderByCreatedDateDesc(companyName);
     }
 
+    public List<Token> getActiveChallenges() {
+        return tokenRepository.findByStatusOrderByCreatedDateDesc(1);
+    }
+
+    public Token findTokenById(Long id) {
+        return tokenRepository.findById(id).orElse(null);
+    }
+
+    public List<Token> getMyRewards(String userId) {
+        return tokenRepository.findByUserIdAndStatusOrderByClaimedDateDesc(userId, 2);
+    }
+
 }

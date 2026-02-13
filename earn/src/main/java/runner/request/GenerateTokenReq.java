@@ -14,4 +14,5 @@ public class GenerateTokenReq {
     String price;
     String challenge;
     Integer quantity;
+    Double requiredDistance;
 }

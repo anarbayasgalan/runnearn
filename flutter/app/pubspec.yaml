@@ -10,13 +10,12 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # iOS style icons
   cupertino_icons: ^1.0.8
-
-  # Map and location (latest compatible versions)
   google_maps_flutter: ^2.3.0
   location: ^8.0.1
   http: ^1.1.0
+  shared_preferences: ^2.2.2
+  google_fonts: ^6.1.0
 
 dev_dependencies:
   flutter_test:

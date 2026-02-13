@@ -9,5 +9,5 @@ public class LoginReq {
 
     public String userName;
     public String userPass;
-
+    public String clientType; // "WEB", "MOBILE"
 }

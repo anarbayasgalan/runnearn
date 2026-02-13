@@ -35,6 +35,7 @@ export class DashboardComponent implements OnInit {
       price: ['', Validators.required],
       challenge: ['', Validators.required],
       quantity: [1, [Validators.required, Validators.min(1), Validators.max(100)]],
+      requiredDistance: [null],
       userPass: ['', Validators.required]
     });
   }

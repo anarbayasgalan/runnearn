@@ -1,234 +1,97 @@
-// main.dart
-// Flutter Run Tracking App (Strava-like basic version)
-// Requires: google_maps_flutter, location, http
-
-import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'dart:math';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
-import 'package:http/http.dart' as http;
+import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/login_screen.dart';
+import 'screens/register_screen.dart';
+import 'screens/dashboard_screen.dart';
+import 'screens/challenge_screen.dart';
+import 'screens/run_screen.dart';
+import 'screens/tokens_screen.dart';
+import 'services/api_service.dart';
 
 void main() {
-  runApp(const RunTrackerApp());
+  runApp(const RunEarnApp());
 }
 
-class RunTrackerApp extends StatelessWidget {
-  const RunTrackerApp({super.key});
+class RunEarnApp extends StatelessWidget {
+  const RunEarnApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'RunEarn',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(),
-      home: const RunScreen(),
-    );
-  }
-}
-
-class RunScreen extends StatefulWidget {
-  const RunScreen({super.key});
-
-  @override
-  State<RunScreen> createState() => _RunScreenState();
-}
-
-class _RunScreenState extends State<RunScreen> {
-  final Location location = Location();
-  StreamSubscription<LocationData>? locationSub;
-
-  GoogleMapController? mapController;
-
-  bool isRunning = false;
-  List<LatLng> route = [];
-
-  double totalDistance = 0;
-
-  final Set<Polyline> polylines = {};
-
-  static const CameraPosition initialPosition = CameraPosition(
-    target: LatLng(52.5200, 13.4050), // Berlin
-    zoom: 15,
-  );
-
-  @override
-  void dispose() {
-    locationSub?.cancel();
-    super.dispose();
-  }
-
-  // Start tracking
-  Future<void> startRun() async {
-    bool enabled = await location.serviceEnabled();
-    if (!enabled) enabled = await location.requestService();
-
-    PermissionStatus permission = await location.hasPermission();
-    if (permission == PermissionStatus.denied) {
-      permission = await location.requestPermission();
-    }
-
-    if (permission != PermissionStatus.granted) return;
-
-    route.clear();
-    totalDistance = 0;
-
-    setState(() {
-      isRunning = true;
-    });
-
-    locationSub = location.onLocationChanged.listen((loc) {
-      if (loc.latitude == null || loc.longitude == null) return;
-
-      final point = LatLng(loc.latitude!, loc.longitude!);
-
-      if (route.isNotEmpty) {
-        totalDistance += calculateDistance(route.last, point);
-      }
-
-      route.add(point);
-
-      updatePolyline();
-
-      mapController?.animateCamera(
-        CameraUpdate.newLatLng(point),
-      );
-
-      setState(() {});
-    });
-  }
-
-  // Stop tracking
-  Future<void> stopRun() async {
-    await locationSub?.cancel();
-
-    setState(() {
-      isRunning = false;
-    });
-
-    await saveRunToBackend();
-  }
-
-  // Draw polyline
-  void updatePolyline() {
-    polylines.clear();
-
-    polylines.add(
-      Polyline(
-        polylineId: const PolylineId("route"),
-        points: route,
-        width: 6,
-        color: Colors.orangeAccent,
-        endCap: Cap.roundCap,
-        startCap: Cap.roundCap,
+      theme: ThemeData(
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
+        primaryColor: const Color(0xFFFF6B00),
+        textTheme: GoogleFonts.outfitTextTheme(
+          ThemeData.light().textTheme,
+        ),
+        colorScheme: const ColorScheme.light(
+          primary: Color(0xFFFF6B00),
+          secondary: Color(0xFF2E86DE),
+          surface: Colors.white,
+          error: Color(0xFFEF4444),
+        ),
+        useMaterial3: true,
       ),
+      home: const SplashGate(),
+      routes: {
+        '/login': (_) => const LoginScreen(),
+        '/register': (_) => const RegisterScreen(),
+        '/dashboard': (_) => const DashboardScreen(),
+        '/run': (_) => const RunScreen(),
+        '/challenge': (_) => const ChallengeScreen(),
+        '/tokens': (_) => const TokensScreen(),
+      },
     );
   }
+}
 
-  // Distance in meters (Haversine)
-  double calculateDistance(LatLng p1, LatLng p2) {
-    const R = 6371000; // Earth radius
+/// Checks for an existing session and routes accordingly.
+class SplashGate extends StatefulWidget {
+  const SplashGate({super.key});
 
-    double lat1 = p1.latitude * 0.0174533;
-    double lat2 = p2.latitude * 0.0174533;
-    double dLat = (p2.latitude - p1.latitude) * 0.0174533;
-    double dLng = (p2.longitude - p1.longitude) * 0.0174533;
+  @override
+  State<SplashGate> createState() => _SplashGateState();
+}
 
-    double a =
-        (sin(dLat / 2) * sin(dLat / 2)) +
-            cos(lat1) * cos(lat2) * sin(dLng / 2) * sin(dLng / 2);
-
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-
-    return R * c;
+class _SplashGateState extends State<SplashGate> {
+  @override
+  void initState() {
+    super.initState();
+    _checkSession();
   }
 
-  // Send run to Java backend
-  Future<void> saveRunToBackend() async {
-    final data = {
-      "distance": totalDistance,
-      "route": route
-          .map((p) => {"lat": p.latitude, "lng": p.longitude})
-          .toList(),
-    };
+  Future<void> _checkSession() async {
+    final prefs = await SharedPreferences.getInstance();
+    final session = prefs.getString('session');
 
-    await http.post(
-      Uri.parse("http://10.0.2.2:8080/api/run"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(data),
-    );
+    if (!mounted) return;
+
+    if (session != null && session.isNotEmpty) {
+      // Verify session validity
+      final user = await ApiService.getMe();
+      if (user != null && mounted) {
+        Navigator.pushReplacementNamed(context, '/dashboard');
+        return;
+      }
+      // Invalid session
+      await ApiService.clearSession();
+    }
+    
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/login');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          GoogleMap(
-            initialCameraPosition: initialPosition,
-            myLocationEnabled: true,
-            polylines: polylines,
-            onMapCreated: (c) => mapController = c,
-          ),
-
-          // Top Stats
-          Positioned(
-            top: 50,
-            left: 20,
-            right: 20,
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              color: Colors.black87,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    statBox("Distance", "${(totalDistance / 1000).toStringAsFixed(2)} km"),
-                    statBox("Status", isRunning ? "Running" : "Stopped"),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Start/Stop Button
-          Positioned(
-            bottom: 40,
-            left: 40,
-            right: 40,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                backgroundColor: isRunning ? Colors.red : Colors.green,
-              ),
-              onPressed: isRunning ? stopRun : startRun,
-              child: Text(
-                isRunning ? "STOP RUN" : "START RUN",
-                style: const TextStyle(fontSize: 18),
-              ),
-            ),
-          )
-        ],
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(color: Color(0xFF00C9FF)),
       ),
-    );
-  }
-
-  Widget statBox(String title, String value) {
-    return Column(
-      children: [
-        Text(title, style: const TextStyle(color: Colors.grey)),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
-      ],
     );
   }
 }

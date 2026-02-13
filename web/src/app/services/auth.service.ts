@@ -18,9 +18,16 @@ export class AuthService {
   }
 
   login(userName: string, userPass: string) {
-    return this.api.post<any>('/login', { userName, userPass }).pipe(
+    return this.api.post<any>('/login', { userName, userPass, clientType: 'WEB' }).pipe(
       tap(res => {
         if (res.responseCode === 0 && res.session) {
+          // Strict Role Check: Only allow ADMIN and COMPANY
+          const allowedRoles = ['ADMIN', 'COMPANY'];
+          if (!allowedRoles.includes(res.userType)) {
+            res.responseCode = 403;
+            res.responseDesc = 'Access Denied: Runners cannot access the Admin Portal';
+            return;
+          }
           this.saveToken(res.session);
         }
       })

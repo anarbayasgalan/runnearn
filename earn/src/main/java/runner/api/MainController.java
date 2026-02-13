@@ -1,9 +1,7 @@
 package runner.api;
 
 import runner.request.*;
-import runner.db.User;
 import runner.db.Company;
-import runner.db.Token;
 import runner.service.MainService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -27,12 +25,12 @@ public class MainController {
     }
 
     @GetMapping("/home")
-    public User getCurrentUser() {
+    public GetCurrentUserRes getCurrentUser() {
         return service.getCurrentUser();
     }
 
     @GetMapping("/me")
-    public User getMe() {
+    public GetCurrentUserRes getMe() {
         return service.getCurrentUser();
     }
 
@@ -72,7 +70,7 @@ public class MainController {
     }
 
     @GetMapping("/tokens")
-    public java.util.List<Token> getTokens() {
+    public java.util.List<GetTokenRes> getTokens() {
         return service.getTokens();
     }
 
@@ -89,5 +87,20 @@ public class MainController {
     @PostMapping("/forgot-password/reset")
     public GenericResponse resetPassword(@RequestBody ForgotPasswordResetReq req) {
         return service.resetPassword(req);
+    }
+
+    @GetMapping("/challenges")
+    public java.util.List<GetActiveChallengeRes> getActiveChallenges() {
+        return service.getActiveChallenges();
+    }
+
+    @PostMapping("/challenge/accept")
+    public GenericResponse acceptChallenge(@RequestBody AcceptChallengeReq req) {
+        return service.acceptChallenge(req);
+    }
+
+    @GetMapping("/my-rewards")
+    public java.util.List<GetTokenRes> getMyRewards() {
+        return service.getMyRewards();
     }
 }

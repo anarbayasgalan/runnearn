@@ -44,4 +44,11 @@ public class Token {
 
     @Column(name = "redeemed_date")
     private LocalDateTime redeemedDate;
+
+    @Column(name = "claimed_date")
+    private LocalDateTime claimedDate;
+
+    @Column(name = "required_distance")
+    private Double requiredDistance;
+
 }

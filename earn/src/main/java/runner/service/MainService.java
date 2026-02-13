@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import runner.db.*;
 import runner.request.*;
+import runner.repositories.RunRepository;
 
 import javax.crypto.Cipher;
 import java.security.*;
@@ -24,6 +25,8 @@ public class MainService {
     private ParamService param;
     @Autowired
     PasswordEncoder passwordEncoder;
+    @Autowired
+    private RunRepository runRepo;
 
     private static final Logger log = LoggerFactory.getLogger(MainService.class);
 
@@ -75,7 +78,20 @@ public class MainService {
         // 3. Check password
         Core.validate(passwordEncoder.matches(req.getUserPass(), cred.getUserPass()), 3, "Invalid password");
 
-        // 4. Generate session with user_id
+        // 4. Check client type restrictions
+        if ("WEB".equalsIgnoreCase(req.getClientType())) {
+            // Web portal is only for ADMIN and COMPANY
+            if (!"ADMIN".equalsIgnoreCase(u.getUserType()) && !"COMPANY".equalsIgnoreCase(u.getUserType())) {
+                throw new RunnerException(4, "Access Denied: Runners cannot access the Admin Portal");
+            }
+        } else if ("MOBILE".equalsIgnoreCase(req.getClientType())) {
+            // Mobile app is only for Runners
+            if ("ADMIN".equalsIgnoreCase(u.getUserType()) || "COMPANY".equalsIgnoreCase(u.getUserType())) {
+                throw new RunnerException(4, "Access Denied: Admins cannot use the Runner App");
+            }
+        }
+
+        // 5. Generate session with user_id
         String token = generateSession(cred.getId().getUserId());
 
         // 5.response
@@ -83,6 +99,7 @@ public class MainService {
         res.setResponseCode(0); // success
         res.setResponseDesc("Login successful");
         res.setSession(token);
+        res.setUserType(u.getUserType());
 
         return res;
     }
@@ -188,7 +205,9 @@ public class MainService {
 
                     // Save token
                     Token token = new Token();
-                    token.setUserId(u.getUserId());
+
+                    // it need to be filled with application user who wins challenge.
+                    // token.setUserId(u.getUserId());
                     token.setTkn(tkn);
                     token.setStatus(1);
                     token.setCompanyName(u.getCompanyName());
@@ -196,6 +215,7 @@ public class MainService {
                     token.setExpireDate(req.getExpireDate());
                     token.setPrice(req.getPrice());
                     token.setChallenge(req.getChallenge());
+                    token.setRequiredDistance(req.getRequiredDistance());
                     param.addToken(token);
 
                     tokenCodes.add(tkn);
@@ -300,10 +320,11 @@ public class MainService {
         return new String(decryptedBytes);
     }
 
-    public User getCurrentUser() {
+    public GetCurrentUserRes getCurrentUser() {
         // Get userId from SecurityContext
         String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return param.findUser(userId);
+        User u = param.findUser(userId);
+        return GetCurrentUserRes.fromUser(u);
     }
 
     public UpdateCompanyRes updateCompany(UpdateCompanyReq req) {
@@ -341,7 +362,7 @@ public class MainService {
         return company;
     }
 
-    public java.util.List<Token> getTokens() {
+    public java.util.List<GetTokenRes> getTokens() {
         // Get userId from SecurityContext
         String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
@@ -350,7 +371,9 @@ public class MainService {
             throw new RunnerException(1, "User or company not found");
         }
 
-        return param.getTokensByCompany(u.getCompanyName());
+        return param.getTokensByCompany(u.getCompanyName()).stream()
+                .map(GetTokenRes::fromToken)
+                .toList();
     }
 
     private String generateOTP() {
@@ -451,6 +474,59 @@ public class MainService {
         GenericResponse res = new GenericResponse();
         res.setResponseDesc("Password reset successfully");
         res.setMessage("You can now login with your new password");
+        return res;
+    }
+
+    public java.util.List<GetActiveChallengeRes> getActiveChallenges() {
+        return param.getActiveChallenges().stream()
+                .map(GetActiveChallengeRes::fromToken)
+                .toList();
+    }
+
+    public java.util.List<GetTokenRes> getMyRewards() {
+        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return param.getMyRewards(userId).stream()
+                .map(GetTokenRes::fromToken)
+                .toList();
+    }
+
+    @Transactional
+    public GenericResponse acceptChallenge(AcceptChallengeReq req) {
+        GenericResponse res = new GenericResponse();
+
+        // Get runner userId from SecurityContext
+        String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        Token token = param.findTokenById(req.getTokenId());
+        if (token == null) {
+            throw new RunnerException(1, "Challenge not found");
+        }
+
+        if (token.getStatus() != 1) {
+            throw new RunnerException(2, "Challenge is no longer available");
+        }
+
+        if (token.getExpireDate() != null && token.getExpireDate().isBefore(Core.getNow())) {
+            throw new RunnerException(3, "Challenge has expired");
+        }
+        if (token.getUserId() != null && token.getUserId().equals(userId)) {
+            throw new RunnerException(4, "You have already accepted this challenge");
+        }
+        if (token.getRequiredDistance() != null && token.getRequiredDistance() > 0) {
+            double totalDistance = runRepo.getTotalDistanceByUserId(userId);
+            if (totalDistance < token.getRequiredDistance()) {
+                throw new RunnerException(5, String.format(
+                        "You need %.1f km but have only run %.1f km. Keep running!",
+                        token.getRequiredDistance(), totalDistance));
+            }
+        }
+
+        token.setUserId(userId);
+        token.setStatus(2); // 2 = USER
+        token.setClaimedDate(Core.getNow());
+        param.updateToken(token);
+
+        res.setResponseDesc("Challenge accepted! Show this to the shop to claim your reward.");
         return res;
     }
 }
