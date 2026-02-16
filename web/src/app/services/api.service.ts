@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
 })
 export class ApiService {
 
-  private baseUrl = '/api';
+  private baseUrl = 'https://runnearn.onrender.com'; // Use '/api' for local dev
 
   constructor(private http: HttpClient) { }
 
