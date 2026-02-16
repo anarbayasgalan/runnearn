@@ -39,10 +39,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // Allow Vercel and Localhost
-        config.setAllowedOrigins(List.of(
-                "https://runnearn.vercel.app",
-                "http://localhost:4200"));
+        // Allow ALL for debugging (Pattern is better for credentials=true)
+        config.addAllowedOriginPattern("*");
+
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("X-Auth-Token"));
