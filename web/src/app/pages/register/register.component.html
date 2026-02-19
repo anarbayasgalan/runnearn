@@ -5,8 +5,8 @@
 
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
             <div class="form-group">
-                <label>Username/Email</label>
-                <input type="text" formControlName="userName" class="input-field" placeholder="Choose a username">
+                <label>Email</label>
+                <input type="text" formControlName="userName" class="input-field" placeholder="Enter your email">
                 <div *ngIf="registerForm.get('userName')?.hasError('email') && registerForm.get('userName')?.touched"
                     style="color: #ef4444; font-size: 0.85rem; margin-top: 0.25rem; font-weight: 500;">
                     Please enter a valid email address!

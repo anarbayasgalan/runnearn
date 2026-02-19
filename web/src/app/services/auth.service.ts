@@ -21,11 +21,36 @@ export class AuthService {
     return this.api.post<any>('/login', { userName, userPass, clientType: 'WEB' }).pipe(
       tap(res => {
         if (res.responseCode === 0 && res.session) {
-          // Strict Role Check: Only allow ADMIN and COMPANY
-          const allowedRoles = ['ADMIN', 'COMPANY'];
+          // Strict Role Check: Only allow ADMIN
+          const allowedRoles = ['ADMIN'];
           if (!allowedRoles.includes(res.userType)) {
             res.responseCode = 403;
-            res.responseDesc = 'Access Denied: Runners cannot access the Admin Portal';
+            res.responseDesc = 'Access Denied: Users cannot access the Admin Portal';
+            return;
+          }
+          this.saveToken(res.session);
+        }
+      })
+
+    );
+  }
+
+
+  loginSocial(provider: string, token: string, email?: string, name?: string, photoUrl?: string) {
+    return this.api.post<any>('/login/social', {
+      provider,
+      token,
+      email,
+      name,
+      photoUrl,
+      clientType: 'WEB'
+    }).pipe(
+      tap(res => {
+        if (res.responseCode === 0 && res.session) {
+          const allowedRoles = ['ADMIN'];
+          if (!allowedRoles.includes(res.userType)) {
+            res.responseCode = 403;
+            res.responseDesc = 'Access Denied: Users cannot access the Admin Portal';
             return;
           }
           this.saveToken(res.session);
@@ -33,6 +58,7 @@ export class AuthService {
       })
     );
   }
+
 
   register(data: any) {
     return this.api.post<any>('/registerUser', data).pipe(
@@ -43,6 +69,7 @@ export class AuthService {
       })
     );
   }
+
 
   updateCompany(data: any) {
     const token = localStorage.getItem('auth_token');

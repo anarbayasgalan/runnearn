@@ -119,8 +119,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                   // Username
                   _buildField(
                     ctrl: _userCtrl,
-                    hint: 'Username',
-                    icon: Icons.person_outline,
+                    hint: 'Email',
+                    icon: Icons.email_outlined,
                   ),
                   const SizedBox(height: 16),
 

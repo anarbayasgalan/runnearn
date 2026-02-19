@@ -24,6 +24,11 @@ public class MainController {
         return service.login(req);
     }
 
+    @PostMapping("/login/social")
+    public LoginRes loginSocial(@RequestBody LoginSocialReq req) {
+        return service.loginSocial(req);
+    }
+
     @GetMapping("/home")
     public GetCurrentUserRes getCurrentUser() {
         return service.getCurrentUser();

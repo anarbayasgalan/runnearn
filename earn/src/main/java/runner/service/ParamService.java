@@ -63,6 +63,15 @@ public class ParamService {
     }
 
     @Transactional
+    public void updateSessionExpiry(String session, java.time.LocalDateTime newExpiry) {
+        UserSession s = userSessionRepository.findById(session).orElse(null);
+        if (s != null) {
+            s.setExpireDate(newExpiry);
+            userSessionRepository.save(s);
+        }
+    }
+
+    @Transactional
     public void addToken(Token token) {
         tokenRepository.save(token);
     }
@@ -108,6 +117,17 @@ public class ParamService {
 
     public List<Token> getMyRewards(String userId) {
         return tokenRepository.findByUserIdAndStatusOrderByClaimedDateDesc(userId, 2);
+    }
+
+    @Autowired
+    private SocialAccountRepository socialAccountRepository;
+
+    public void createSocialAccount(SocialAccount account) {
+        socialAccountRepository.save(account);
+    }
+
+    public SocialAccount findSocialAccount(String provider, String providerId) {
+        return socialAccountRepository.findByProviderAndProviderId(provider, providerId);
     }
 
 }

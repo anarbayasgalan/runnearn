@@ -52,6 +52,23 @@ body {
   color: var(--color-text-main);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  cursor: none;
+}
+
+*,
+*::before,
+*::after {
+  cursor: none !important;
+}
+
+@media (max-width: 768px) {
+
+  body,
+  *,
+  *::before,
+  *::after {
+    cursor: auto !important;
+  }
 }
 
 /* Utilities */
@@ -155,18 +172,4 @@ h3 {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-}
-
-/* Global Cursor Hiding for Custom Cursor */
-@media (min-width: 769px) {
-
-  body,
-  a,
-  button,
-  input,
-  textarea,
-  select,
-  [role="button"] {
-    cursor: none !important;
-  }
 }

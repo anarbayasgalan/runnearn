@@ -1,13 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
 
-  private baseUrl = 'https://runnearn.onrender.com/api'; // Use '/api' for local dev
+  private baseUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) { }
 
@@ -17,7 +18,7 @@ export class ApiService {
       'Content-Type': 'application/json'
     });
     if (token) {
-      headers = headers.set('X-Auth-Token', token);
+      headers = headers.set('Authorization', `Bearer ${token}`);
     }
     return headers;
   }

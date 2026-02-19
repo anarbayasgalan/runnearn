@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../widgets/interactive_background.dart';
 import '../services/api_service.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -55,9 +58,114 @@ class _LoginScreenState extends State<LoginScreen>
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+    }
+  }
+
+  Future<void> _loginGoogle() async {
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        // clientId: 'YOUR_IOS_CLIENT_ID', // Only needed for iOS
+        scopes: ['email', 'profile'],
+      );
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      
+      if (googleUser != null) {
+        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+        
+        setState(() => _loading = true);
+        
+        final res = await ApiService.loginSocial(
+          'GOOGLE', 
+          googleAuth.idToken ?? '', // Android uses idToken, iOS might differ
+          googleUser.email, 
+          googleUser.displayName, 
+          googleUser.photoUrl
+        );
+
+        if (!mounted) return;
+        if (res['responseCode'] == 0) {
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        } else {
+          _snack(res['responseDesc'] ?? 'Login failed');
+        }
+      }
+    } catch (e) {
+      _snack('Google Sign In failed: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loginFacebook() async {
+    try {
+      final LoginResult result = await FacebookAuth.instance.login();
+      
+      if (result.status == LoginStatus.success) {
+        final AccessToken accessToken = result.accessToken!;
+        
+        // Get user data from Graph API if needed, or backend can fetch it
+        final userData = await FacebookAuth.instance.getUserData();
+
+        setState(() => _loading = true);
+        
+        final res = await ApiService.loginSocial(
+          'FACEBOOK', 
+          accessToken.tokenString, 
+          userData['email'], 
+          userData['name'], 
+          userData['picture']?['data']?['url']
+        );
+
+        if (!mounted) return;
+        if (res['responseCode'] == 0) {
+          Navigator.pushReplacementNamed(context, '/dashboard');
+        } else {
+          _snack(res['responseDesc'] ?? 'Login failed');
+        }
+      } else {
+        _snack('Facebook Sign In failed: ${result.message}');
+      }
+    } catch (e) {
+      _snack('Facebook error: $e');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Widget _socialButton({
+    required String icon,
+    required IconData iconData, // Placeholder until assets are ready
+    required Color color, 
+    required VoidCallback onTap
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 60,
+        height: 60,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+          boxShadow: [
+             BoxShadow(
+               color: Colors.black.withOpacity(0.05),
+               blurRadius: 10,
+               offset: const Offset(0, 4),
+             )
+          ],
+        ),
+        child: Center(
+          child: Icon(iconData, color: color, size: 30),
+          // child: Image.asset(icon, width: 24, height: 24), // Use this when assets exist
+        ),
+      ),
+    );
   }
 
   void _snack(String msg) {
+
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating));
   }
@@ -124,8 +232,8 @@ class _LoginScreenState extends State<LoginScreen>
                   // Username
                   _buildField(
                     ctrl: _userCtrl,
-                    hint: 'Username',
-                    icon: Icons.person_outline,
+                    hint: 'Email',
+                    icon: Icons.email_outlined,
                   ),
                   const SizedBox(height: 16),
 
@@ -172,7 +280,42 @@ class _LoginScreenState extends State<LoginScreen>
                                   fontWeight: FontWeight.w600)),
                     ),
                   ),
+                  const SizedBox(height: 16),
+
+                  Row(
+                    children: [
+                       const Expanded(child: Divider()),
+                       Padding(
+                         padding: const EdgeInsets.symmetric(horizontal: 16),
+                         child: Text("OR", style: GoogleFonts.outfit(color: Colors.grey)),
+                       ),
+                       const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Social Login Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _socialButton(
+                        icon: 'assets/google.png', // Fallback to Icon if image missing? passing icon data for now
+                        iconData: Icons.g_mobiledata, // Placeholder
+                        color: Colors.red,
+                        onTap: _loginGoogle,
+                      ),
+                      const SizedBox(width: 24),
+                      _socialButton(
+                        icon: 'assets/facebook.png',
+                        iconData: Icons.facebook,
+                        color: Colors.blue,
+                        onTap: _loginFacebook,
+                      ),
+                    ],
+                  ),
+
                   const SizedBox(height: 24),
+
 
                   // Register link
                   Row(

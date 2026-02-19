@@ -81,10 +81,11 @@ export class DashboardComponent implements OnInit {
   loadTokens() {
     this.auth.getTokens().subscribe({
       next: (tokens) => {
-        this.tokens.set(tokens);
+        this.tokens.set(Array.isArray(tokens) ? tokens : []);
       },
       error: (err) => {
         console.error('Error loading tokens:', err);
+        this.tokens.set([]);
       }
     });
   }
@@ -194,11 +195,13 @@ export class DashboardComponent implements OnInit {
   }
 
   getActiveTokens() {
-    return this.tokens().filter(t => t.status === 1);
+    const t = this.tokens();
+    return Array.isArray(t) ? t.filter(t => t.status === 1) : [];
   }
 
   getRedeemedTokens() {
-    return this.tokens().filter(t => t.status === 0);
+    const t = this.tokens();
+    return Array.isArray(t) ? t.filter(t => t.status === 0) : [];
   }
 
   isExpired(token: any): boolean {

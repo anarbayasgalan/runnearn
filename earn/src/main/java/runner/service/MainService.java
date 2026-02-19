@@ -3,6 +3,7 @@ package runner.service;
 import org.springframework.security.core.context.SecurityContextHolder;
 import runner.exception.RunnerException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import runner.db.*;
 import runner.request.*;
@@ -17,6 +18,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.gson.GsonFactory;
+import org.springframework.web.client.RestTemplate;
+import java.util.Collections;
+import java.util.Map;
 
 @Service
 public class MainService {
@@ -27,6 +35,14 @@ public class MainService {
     PasswordEncoder passwordEncoder;
     @Autowired
     private RunRepository runRepo;
+    @Value("${google.client-id}")
+    private String googleClientId;
+    @Value("${facebook.app-id}")
+    private String facebookAppId;
+    @Value("${facebook.app-secret}")
+    private String facebookAppSecret;
+    @Autowired
+    private JwtService jwtService;
 
     private static final Logger log = LoggerFactory.getLogger(MainService.class);
 
@@ -52,7 +68,7 @@ public class MainService {
         log.info("User created: " + req.getUserName());
 
         // Generate session token for auto-login
-        String token = generateSession(u.getUserId());
+        String token = generateSession(u.getUserId(), req.getUserType());
 
         RegisterRes res = new RegisterRes();
         res.setResponseCode(0);
@@ -80,19 +96,19 @@ public class MainService {
 
         // 4. Check client type restrictions
         if ("WEB".equalsIgnoreCase(req.getClientType())) {
-            // Web portal is only for ADMIN and COMPANY
-            if (!"ADMIN".equalsIgnoreCase(u.getUserType()) && !"COMPANY".equalsIgnoreCase(u.getUserType())) {
-                throw new RunnerException(4, "Access Denied: Runners cannot access the Admin Portal");
+            // Web portal is only for ADMIN
+            if (!"ADMIN".equalsIgnoreCase(u.getUserType())) {
+                throw new RunnerException(4, "Access Denied: Users cannot access the Admin Portal");
             }
         } else if ("MOBILE".equalsIgnoreCase(req.getClientType())) {
-            // Mobile app is only for Runners
-            if ("ADMIN".equalsIgnoreCase(u.getUserType()) || "COMPANY".equalsIgnoreCase(u.getUserType())) {
+            // Mobile app is only for Users
+            if ("ADMIN".equalsIgnoreCase(u.getUserType())) {
                 throw new RunnerException(4, "Access Denied: Admins cannot use the Runner App");
             }
         }
 
         // 5. Generate session with user_id
-        String token = generateSession(cred.getId().getUserId());
+        String token = generateSession(cred.getId().getUserId(), u.getUserType());
 
         // 5.response
         LoginRes res = new LoginRes();
@@ -104,20 +120,142 @@ public class MainService {
         return res;
     }
 
-    private String generateSession(String userId) {
-        UserSession res = new UserSession();
+    @Transactional
+    public LoginRes loginSocial(LoginSocialReq req) {
+        String email = null;
+        String providerId = null;
+        String name = req.getName();
+        String picture = req.getPhotoUrl();
 
-        String session = generateOtt(20);
+        // 1. Verify Token
+        if ("GOOGLE".equalsIgnoreCase(req.getProvider())) {
+            try {
+                GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(),
+                        new GsonFactory())
+                        .setAudience(Collections.singletonList(googleClientId))
+                        .build();
 
+                GoogleIdToken idToken = verifier.verify(req.getToken());
+                if (idToken != null) {
+                    GoogleIdToken.Payload payload = idToken.getPayload();
+                    email = payload.getEmail();
+                    providerId = payload.getSubject();
+                    if (name == null)
+                        name = (String) payload.get("name");
+                    if (picture == null)
+                        picture = (String) payload.get("picture");
+                } else {
+                    throw new RunnerException(1, "Invalid Google Token");
+                }
+            } catch (Exception e) {
+                log.error("Google verify error", e);
+                throw new RunnerException(1, "Google Token verification failed");
+            }
+        } else if ("FACEBOOK".equalsIgnoreCase(req.getProvider())) {
+            try {
+                RestTemplate restTemplate = new RestTemplate();
+
+                // Step 1: Verify the token was issued for our app via debug_token
+                String debugUrl = "https://graph.facebook.com/debug_token?input_token="
+                        + req.getToken() + "&access_token=" + facebookAppId + "|" + facebookAppSecret;
+                Map<String, Object> debugResp = restTemplate.getForObject(debugUrl, Map.class);
+                if (debugResp != null && debugResp.containsKey("data")) {
+                    Map<String, Object> data = (Map<String, Object>) debugResp.get("data");
+                    String tokenAppId = String.valueOf(data.get("app_id"));
+                    Boolean isValid = (Boolean) data.get("is_valid");
+                    if (!facebookAppId.equals(tokenAppId) || !Boolean.TRUE.equals(isValid)) {
+                        throw new RunnerException(1, "Facebook token is not valid for this application");
+                    }
+                } else {
+                    throw new RunnerException(1, "Failed to verify Facebook token");
+                }
+
+                // Step 2: Fetch user profile
+                String url = "https://graph.facebook.com/me?fields=id,name,email,picture&access_token="
+                        + req.getToken();
+                Map<String, Object> resp = restTemplate.getForObject(url, Map.class);
+                if (resp != null && resp.containsKey("id")) {
+                    providerId = (String) resp.get("id");
+                    email = (String) resp.get("email");
+                    if (name == null)
+                        name = (String) resp.get("name");
+                } else {
+                    throw new RunnerException(1, "Invalid Facebook Token");
+                }
+            } catch (RunnerException e) {
+                throw e;
+            } catch (Exception e) {
+                log.error("Facebook verify error", e);
+                throw new RunnerException(1, "Facebook Token verification failed");
+            }
+        } else {
+            throw new RunnerException(1, "Unknown Provider");
+        }
+        if (email == null) {
+            if (!Core.nullOrEmpty(req.getEmail())) {
+                email = req.getEmail();
+            } else {
+                throw new RunnerException(2, "Email is required for sign up");
+            }
+        }
+
+        // 2. Check if social account exists
+        SocialAccount socialAccount = param.findSocialAccount(req.getProvider(), providerId);
+        User user;
+
+        if (socialAccount != null) {
+            // Login
+            user = param.findUser(socialAccount.getUserId());
+        } else {
+            // Check if email exists as userName
+            user = param.findUserByUserName(email);
+            if (user == null) {
+                // Register new user
+                CreateUserReq createReq = new CreateUserReq();
+                createReq.setUserName(email);
+                if ("WEB".equalsIgnoreCase(req.getClientType())) {
+                    createReq.setType("ADMIN");
+                } else {
+                    createReq.setType("USER");
+                }
+
+                CreateUserRes createRes = createUser(createReq);
+                user = param.findUser(createRes.getUserId());
+            }
+
+            // Create Social Link
+            SocialAccount newAccount = new SocialAccount();
+            newAccount.setUserId(user.getUserId());
+            newAccount.setProvider(req.getProvider());
+            newAccount.setProviderId(providerId);
+            newAccount.setEmail(email);
+            param.createSocialAccount(newAccount);
+        }
+
+        // 3. Generate Session
+        String session = generateSession(user.getUserId(), user.getUserType());
+
+        LoginRes res = new LoginRes();
+        res.setResponseCode(0);
+        res.setResponseDesc("Login successful");
         res.setSession(session);
-        res.setUserId(userId);
-        res.setStatus(1);
-        // it can be config and make it more dynamic minutes
-        res.setExpireDate(Core.getNow().plusMinutes(5));
+        res.setUserType(user.getUserType());
 
-        param.addUserSession(res);
+        return res;
+    }
 
-        return session;
+    private String generateSession(String userId, String userType) {
+        // Still save a DB session for audit/backward compatibility
+        UserSession dbSession = new UserSession();
+        String sessionId = generateOtt(20);
+        dbSession.setSession(sessionId);
+        dbSession.setUserId(userId);
+        dbSession.setStatus(1);
+        dbSession.setExpireDate(Core.getNow().plusMinutes(5));
+        param.addUserSession(dbSession);
+
+        // Return JWT as the primary token
+        return jwtService.generateToken(userId, userType);
     }
 
     private CreateUserRes createUser(CreateUserReq req) {
@@ -377,7 +515,7 @@ public class MainService {
     }
 
     private String generateOTP() {
-        java.util.Random random = new java.util.Random();
+        SecureRandom random = new SecureRandom();
         int otp = 100000 + random.nextInt(900000);
         return String.valueOf(otp);
     }

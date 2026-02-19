@@ -1,5 +1,6 @@
 package runner.config;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,9 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import runner.db.UserSession;
-import runner.service.Core;
-import runner.service.ParamService;
+import runner.service.JwtService;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,30 +18,26 @@ import java.util.ArrayList;
 @Component
 public class AuthenticationFilter extends OncePerRequestFilter {
 
-    private final ParamService paramService;
+    private final JwtService jwtService;
 
-    public AuthenticationFilter(ParamService paramService) {
-        this.paramService = paramService;
+    public AuthenticationFilter(JwtService jwtService) {
+        this.jwtService = jwtService;
     }
 
-
-    //it's checking every single request because extends OncePerRequestFilter
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String token = request.getHeader("X-Auth-Token");
-        if (!Core.nullOrEmpty(token)) {
-            UserSession session = paramService.getUserFromSession(token);
-            if (session != null && Core.equal(session.getStatus(), 1)) {
-                if (session.getExpireDate() == null || session.getExpireDate().isAfter(Core.getNow())) {
-
-                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                            session.getUserId(), null, new ArrayList<>());
-
-                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
+        // Try JWT from Authorization: Bearer header
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String jwt = authHeader.substring(7);
+            Claims claims = jwtService.validateToken(jwt);
+            if (claims != null) {
+                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                        claims.getSubject(), null, new ArrayList<>());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }
 

@@ -1,18 +1,19 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router, RouterModule } from '@angular/router';
 import { InteractiveBackgroundComponent } from '../../components/interactive-background/interactive-background.component';
+import { SocialAuthService, GoogleLoginProvider, FacebookLoginProvider, SocialUser, GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterModule, InteractiveBackgroundComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, InteractiveBackgroundComponent, GoogleSigninButtonModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.css'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   loginForm: FormGroup;
   errorMsg = '';
   isLoading = false;
@@ -21,12 +22,21 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private auth: AuthService,
-    private router: Router
+    private router: Router,
+    private socialAuthService: SocialAuthService
   ) {
     this.loginForm = this.fb.group({
       userName: ['', [Validators.required]],
       userPass: ['', [Validators.required]]
     });
+  }
+
+  ngOnInit() {
+    this.socialAuthService.authState.subscribe((user) => {
+      this.handleSocialLogin(user.provider, user);
+    });
+
+
   }
 
   onMouseMove(event: MouseEvent) {
@@ -67,4 +77,34 @@ export class LoginComponent {
       });
     }
   }
+
+  signInWithFB(): void {
+
+    this.socialAuthService.signIn(FacebookLoginProvider.PROVIDER_ID).then((user: SocialUser) => {
+    }).catch(err => {
+      this.errorMsg = 'Facebook Login Failed';
+      console.error(err);
+    });
+  }
+
+  handleSocialLogin(provider: string, user: SocialUser) {
+    this.isLoading = true;
+    this.errorMsg = '';
+    this.auth.loginSocial(provider, user.idToken || user.authToken, user.email, user.name, user.photoUrl).subscribe({
+      next: (res) => {
+        this.isLoading = false;
+        if (res.responseCode === 0) {
+          this.router.navigate(['/dashboard']);
+        } else {
+          this.errorMsg = res.responseDesc || 'Login failed';
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMsg = 'Connection error';
+        console.error(err);
+      }
+    });
+  }
 }
+

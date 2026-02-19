@@ -25,7 +25,7 @@ class ApiService {
     final session = await getSession();
     final headers = <String, String>{'Content-Type': 'application/json'};
     if (session != null) {
-      headers['X-Auth-Token'] = session;
+      headers['Authorization'] = 'Bearer $session';
     }
     return headers;
   }
@@ -46,7 +46,29 @@ class ApiService {
       await saveSession(body['session']);
     }
     return body;
+    return body;
   }
+
+  static Future<Map<String, dynamic>> loginSocial(String provider, String token, String? email, String? name, String? photoUrl) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/login/social'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'provider': provider,
+        'token': token,
+        'email': email,
+        'name': name,
+        'photoUrl': photoUrl,
+        'clientType': 'MOBILE',
+      }),
+    );
+    final body = jsonDecode(res.body) as Map<String, dynamic>;
+    if (body['responseCode'] == 0 && body['session'] != null) {
+      await saveSession(body['session']);
+    }
+    return body;
+  }
+
 
   static Future<Map<String, dynamic>> register(String userName, String userPass) async {
     final res = await http.post(
