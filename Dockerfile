@@ -1,7 +1,7 @@
 # Build configuration
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY pom.xml .
+COPY earn/pom.xml .
 COPY earn/src ./src
 # Build the application
 RUN mvn clean package -DskipTests
