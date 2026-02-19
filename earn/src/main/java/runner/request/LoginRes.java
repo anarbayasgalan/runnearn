@@ -8,4 +8,5 @@ import lombok.Setter;
 public class LoginRes extends BaseRes {
     public String session;
     public String userType;
+    public boolean isNewUser;
 }

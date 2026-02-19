@@ -94,7 +94,13 @@ export class LoginComponent implements OnInit {
       next: (res) => {
         this.isLoading = false;
         if (res.responseCode === 0) {
-          this.router.navigate(['/dashboard']);
+          if (res.isNewUser) {
+            this.router.navigate(['/setup'], {
+              state: { companyName: user.name || '' } // pass name as default company name
+            });
+          } else {
+            this.router.navigate(['/dashboard']);
+          }
         } else {
           this.errorMsg = res.responseDesc || 'Login failed';
         }

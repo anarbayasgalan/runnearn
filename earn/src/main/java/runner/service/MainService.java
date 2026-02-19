@@ -202,6 +202,7 @@ public class MainService {
         // 2. Check if social account exists
         SocialAccount socialAccount = param.findSocialAccount(req.getProvider(), providerId);
         User user;
+        boolean isNewUser = false;
 
         if (socialAccount != null) {
             // Login
@@ -221,6 +222,7 @@ public class MainService {
 
                 CreateUserRes createRes = createUser(createReq);
                 user = param.findUser(createRes.getUserId());
+                isNewUser = true;
             }
 
             // Create Social Link
@@ -240,6 +242,7 @@ public class MainService {
         res.setResponseDesc("Login successful");
         res.setSession(session);
         res.setUserType(user.getUserType());
+        res.setNewUser(isNewUser);
 
         return res;
     }
