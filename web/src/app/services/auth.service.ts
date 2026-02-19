@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { ApiService } from './api.service';
 import { Router } from '@angular/router';
 import { tap } from 'rxjs/operators';
+import { SocialAuthService } from '@abacritt/angularx-social-login';
 
 @Injectable({
   providedIn: 'root'
@@ -10,7 +11,7 @@ export class AuthService {
 
   currentUserSignal = signal<any>(null);
 
-  constructor(private api: ApiService, private router: Router) {
+  constructor(private api: ApiService, private router: Router, private socialAuthService: SocialAuthService) {
     const token = localStorage.getItem('auth_token');
     if (token) {
       this.currentUserSignal.set({ token });
@@ -117,6 +118,12 @@ export class AuthService {
   logout() {
     localStorage.removeItem('auth_token');
     this.currentUserSignal.set(null);
+
+    // Clear social login state so it doesn't auto-login when returning to login page
+    try {
+      this.socialAuthService.signOut().catch(() => { });
+    } catch (e) { }
+
     this.router.navigate(['/login']);
   }
 }
