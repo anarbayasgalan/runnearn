@@ -24,13 +24,14 @@
     max-width: 420px;
     position: relative;
     z-index: 10;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.55);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
     box-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.08),
-        0 2px 8px rgba(0, 0, 0, 0.04);
-    border: 1px solid rgba(200, 200, 200, 0.3);
+        0 4px 24px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border: 0.5px solid rgba(255, 255, 255, 0.65);
+    border-radius: 20px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -44,6 +45,14 @@
 .brand-header {
     text-align: center;
     margin-bottom: 2.5rem;
+}
+
+.brand-logo {
+    max-width: 220px;
+    height: auto;
+    margin-bottom: 0.5rem;
+    opacity: 0;
+    animation: fadeIn 0.8s ease forwards 0.2s;
 }
 
 .motion-text {

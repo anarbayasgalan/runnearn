@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/api_service.dart';
+import '../widgets/glass_container.dart';
+import '../widgets/mesh_background.dart';
+import '../theme.dart';
 
 class TokensScreen extends StatefulWidget {
   const TokensScreen({super.key});
@@ -31,81 +34,92 @@ class _TokensScreenState extends State<TokensScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        color: const Color(0xFFF8F9FA),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Header
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.arrow_back_ios,
-                          color: Color(0xFF6B7280), size: 20),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    Text('My Rewards',
-                        style: GoogleFonts.outfit(
-                            color: const Color(0xFF1F2937),
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold)),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // 1. Mesh Background
+          const Positioned.fill(child: MeshBackground()),
+          
+          SafeArea(
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Row(
+                    children: [
+                      GlassContainer(
+                        width: 44,
+                        height: 44,
+                        borderRadius: 22,
+                        padding: EdgeInsets.zero,
+                        child: IconButton(
+                          icon: const Icon(Icons.arrow_back_ios_new,
+                              color: AppTheme.primaryDark, size: 18),
+                          onPressed: () => Navigator.pop(context),
+                        ),
                       ),
-                      child: Text('${_tokens.length} rewards',
-                          style: GoogleFonts.outfit(
-                              color: const Color(0xFF10B981),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600)),
-                    ),
-                  ],
+                      const SizedBox(width: 16),
+                      Text('My Rewards',
+                          style: GoogleFonts.lexend(
+                              color: AppTheme.primaryDark,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold)),
+                      const Spacer(),
+                      GlassContainer(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
+                        borderRadius: 20,
+                        color: AppTheme.primaryOrange.withValues(alpha: 0.2),
+                        borderColor: AppTheme.primaryOrange.withValues(alpha: 0.4),
+                        child: Text('${_tokens.length} rewards',
+                            style: GoogleFonts.lexend(
+                                color: AppTheme.primaryOrange,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700)),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
 
-              Expanded(
-                child: _loading
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                            color: Color(0xFFFF6B00)))
-                    : _tokens.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.card_giftcard,
-                                    color: Colors.grey[300], size: 64),
-                                const SizedBox(height: 12),
-                                Text('No rewards yet',
-                                    style: GoogleFonts.outfit(
-                                        color: Colors.grey[400], fontSize: 16)),
-                                const SizedBox(height: 8),
-                                Text('Accept challenges to earn rewards!',
-                                    style: GoogleFonts.outfit(
-                                        color: Colors.grey[400], fontSize: 13)),
-                              ],
+                Expanded(
+                  child: _loading
+                      ? const Center(
+                          child: CircularProgressIndicator(
+                              color: AppTheme.primaryOrange))
+                      : _tokens.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.card_giftcard,
+                                      color: Colors.grey.withValues(alpha: 0.3), size: 64),
+                                  const SizedBox(height: 12),
+                                  Text('No rewards yet',
+                                      style: GoogleFonts.lexend(
+                                          color: Colors.grey.shade600, fontSize: 16)),
+                                  const SizedBox(height: 8),
+                                  Text('Accept challenges to earn rewards!',
+                                      style: GoogleFonts.lexend(
+                                          color: Colors.grey.shade500, fontSize: 13)),
+                                ],
+                              ),
+                            )
+                          : RefreshIndicator(
+                              onRefresh: _loadTokens,
+                              color: AppTheme.primaryOrange,
+                              child: ListView.builder(
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                                itemCount: _tokens.length,
+                                itemBuilder: (ctx, i) =>
+                                    _rewardCard(_tokens[i]),
+                              ),
                             ),
-                          )
-                        : RefreshIndicator(
-                            onRefresh: _loadTokens,
-                            color: const Color(0xFFFF6B00),
-                            child: ListView.builder(
-                              padding: const EdgeInsets.symmetric(horizontal: 24),
-                              itemCount: _tokens.length,
-                              itemBuilder: (ctx, i) =>
-                                  _rewardCard(_tokens[i]),
-                            ),
-                          ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -115,68 +129,60 @@ class _TokensScreenState extends State<TokensScreen> {
     final price = token['price'] ?? 'Reward';
     final company = token['companyName'] ?? 'Unknown';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFBBC05).withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(12),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: GlassContainer(
+        padding: const EdgeInsets.all(20),
+        borderRadius: 24,
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryOrange.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.card_giftcard,
+                  color: AppTheme.primaryOrange, size: 26),
             ),
-            child: const Icon(Icons.card_giftcard,
-                color: Color(0xFFFBBC05), size: 22),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(challenge,
-                    style: GoogleFonts.outfit(
-                        color: const Color(0xFF1F2937),
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600)),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Text(company,
-                        style: GoogleFonts.outfit(
-                            color: const Color(0xFF6B7280), fontSize: 12)),
-                    const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF10B981).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(challenge,
+                      style: GoogleFonts.lexend(
+                          color: AppTheme.primaryDark,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(company,
+                          style: GoogleFonts.lexend(
+                              color: Colors.grey.shade600, fontSize: 13)),
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryOrange.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(price,
+                            style: GoogleFonts.lexend(
+                                color: AppTheme.primaryOrange,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700)),
                       ),
-                      child: Text(price,
-                          style: GoogleFonts.outfit(
-                              color: const Color(0xFF10B981),
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600)),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

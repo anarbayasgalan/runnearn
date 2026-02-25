@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/interactive_background.dart';
+import '../widgets/mesh_background.dart';
+import '../widgets/glass_container.dart';
+import '../widgets/logo_widget.dart';
+import '../theme.dart';
 import '../services/api_service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
-
+import 'create_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -58,13 +61,12 @@ class _LoginScreenState extends State<LoginScreen>
     } finally {
       if (mounted) setState(() => _loading = false);
     }
-    }
   }
 
   Future<void> _loginGoogle() async {
     try {
       final GoogleSignIn googleSignIn = GoogleSignIn(
-        // clientId: 'YOUR_IOS_CLIENT_ID', // Only needed for iOS
+        clientId: '620364552407-tvb4o5ecc14q5otrse5qneahbna0ntif.apps.googleusercontent.com',
         scopes: ['email', 'profile'],
       );
       final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
@@ -84,7 +86,19 @@ class _LoginScreenState extends State<LoginScreen>
 
         if (!mounted) return;
         if (res['responseCode'] == 0) {
-          Navigator.pushReplacementNamed(context, '/dashboard');
+          if (res['missingPassword'] == true) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CreatePasswordScreen(
+                  companyName: googleUser.displayName ?? googleUser.email,
+                  isNewUser: res['isNewUser'] == true || res['newUser'] == true,
+                ),
+              ),
+            );
+          } else {
+            Navigator.pushReplacementNamed(context, '/dashboard');
+          }
         } else {
           _snack(res['responseDesc'] ?? 'Login failed');
         }
@@ -110,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen>
         
         final res = await ApiService.loginSocial(
           'FACEBOOK', 
-          accessToken.tokenString, 
+          accessToken.token, 
           userData['email'], 
           userData['name'], 
           userData['picture']?['data']?['url']
@@ -118,7 +132,19 @@ class _LoginScreenState extends State<LoginScreen>
 
         if (!mounted) return;
         if (res['responseCode'] == 0) {
-          Navigator.pushReplacementNamed(context, '/dashboard');
+          if (res['missingPassword'] == true) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CreatePasswordScreen(
+                  companyName: userData['name'] ?? userData['email'] ?? 'User',
+                  isNewUser: res['isNewUser'] == true || res['newUser'] == true,
+                ),
+              ),
+            );
+          } else {
+            Navigator.pushReplacementNamed(context, '/dashboard');
+          }
         } else {
           _snack(res['responseDesc'] ?? 'Login failed');
         }
@@ -170,180 +196,157 @@ class _LoginScreenState extends State<LoginScreen>
         .showSnackBar(SnackBar(content: Text(msg), behavior: SnackBarBehavior.floating));
   }
 
-  @override
+    @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Stack(
         children: [
           // 1. Interactive Background
-          const Positioned.fill(child: InteractiveBackground()),
+          const Positioned.fill(child: MeshBackground()),
 
-          // 2. Gradient Overlay (to make text readable)
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 1.5,
-                  colors: [
-                    Colors.white.withValues(alpha: 0.8),
-                    Colors.white.withValues(alpha: 0.95),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // 3. Login Form
+          // 2. Login Form
           SafeArea(
             child: Center(
               child: FadeTransition(
                 opacity: _fadeIn,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                  // Logo
-                  Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: const Color(0xFFFF6B00).withValues(alpha: 0.1),
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: GlassContainer(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Logo Image
+                        const LogoWidget(logoHeight: 80),
+                        const SizedBox(height: 48),
+
+                        // Username
+                        _buildField(
+                          ctrl: _userCtrl,
+                          hint: 'Email',
+                          icon: Icons.email_outlined,
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Password
+                        _buildField(
+                          ctrl: _passCtrl,
+                          hint: 'Password',
+                          icon: Icons.lock_outline,
+                          obscure: _obscure,
+                          suffix: IconButton(
+                            icon: Icon(
+                              _obscure ? Icons.visibility_off : Icons.visibility,
+                              color: const Color(0xFF9CA3AF),
+                              size: 20,
+                            ),
+                            onPressed: () => setState(() => _obscure = !_obscure),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Login Button (Matches "Select Concept" style)
+                        Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primaryOrange.withValues(alpha: 0.3),
+                                blurRadius: 20,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: GestureDetector(
+                            onTap: _loading ? null : _login,
+                            child: GlassContainer(
+                              height: 54,
+                              borderRadius: 30,
+                              color: AppTheme.primaryOrange.withValues(alpha: 0.3),
+                              borderColor: AppTheme.primaryOrange.withValues(alpha: 0.6),
+                              child: Center(
+                                child: _loading
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2, color: AppTheme.primaryDark))
+                                  : Text('Sign In',
+                                      style: GoogleFonts.lexend(
+                                          fontSize: 16,
+                                          color: AppTheme.primaryDark,
+                                          fontWeight: FontWeight.w700)),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        Row(
+                          children: [
+                            const Expanded(child: Divider()),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              child: Text("OR", style: GoogleFonts.lexend(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.grey.shade600)),
+                            ),
+                            const Expanded(child: Divider()),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Social Login Buttons
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _socialButton(
+                              icon: 'assets/google.png',
+                              iconData: Icons.g_mobiledata, // Placeholder
+                              color: Colors.red,
+                              onTap: _loginGoogle,
+                            ),
+                            const SizedBox(width: 24),
+                            _socialButton(
+                              icon: 'assets/facebook.png',
+                              iconData: Icons.facebook,
+                              color: Colors.blue,
+                              onTap: _loginFacebook,
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Register link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text("Don't have an account? ",
+                                style: GoogleFonts.lexend(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
+                            GestureDetector(
+                              onTap: () => Navigator.pushNamed(context, '/register'),
+                              child: Text(
+                                'Sign Up',
+                                style: GoogleFonts.lexend(
+                                  color: AppTheme.primaryOrange,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                    child: const Icon(Icons.directions_run,
-                        size: 44, color: Color(0xFFFF6B00)),
                   ),
-                  const SizedBox(height: 24),
-                  Text('RunEarn',
-                      style: GoogleFonts.outfit(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF1F2937),
-                      )),
-                  const SizedBox(height: 8),
-                  Text('Track. Challenge. Earn.',
-                      style: GoogleFonts.outfit(
-                          fontSize: 15, color: const Color(0xFF6B7280))),
-                  const SizedBox(height: 48),
-
-                  // Username
-                  _buildField(
-                    ctrl: _userCtrl,
-                    hint: 'Email',
-                    icon: Icons.email_outlined,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Password
-                  _buildField(
-                    ctrl: _passCtrl,
-                    hint: 'Password',
-                    icon: Icons.lock_outline,
-                    obscure: _obscure,
-                    suffix: IconButton(
-                      icon: Icon(
-                        _obscure ? Icons.visibility_off : Icons.visibility,
-                        color: const Color(0xFF9CA3AF),
-                        size: 20,
-                      ),
-                      onPressed: () => setState(() => _obscure = !_obscure),
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Login Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 54,
-                    child: ElevatedButton(
-                      onPressed: _loading ? null : _login,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFF6B00),
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16)),
-                        elevation: 4, // Subtle shadow for depth
-                        shadowColor: const Color(0xFFFF6B00).withValues(alpha: 0.3),
-                      ),
-                      child: _loading
-                          ? const SizedBox(
-                              width: 22,
-                              height: 22,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white))
-                          : Text('Sign In',
-                              style: GoogleFonts.outfit(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600)),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  Row(
-                    children: [
-                       const Expanded(child: Divider()),
-                       Padding(
-                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                         child: Text("OR", style: GoogleFonts.outfit(color: Colors.grey)),
-                       ),
-                       const Expanded(child: Divider()),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Social Login Buttons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _socialButton(
-                        icon: 'assets/google.png', // Fallback to Icon if image missing? passing icon data for now
-                        iconData: Icons.g_mobiledata, // Placeholder
-                        color: Colors.red,
-                        onTap: _loginGoogle,
-                      ),
-                      const SizedBox(width: 24),
-                      _socialButton(
-                        icon: 'assets/facebook.png',
-                        iconData: Icons.facebook,
-                        color: Colors.blue,
-                        onTap: _loginFacebook,
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-
-                  // Register link
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("Don't have an account? ",
-                          style: GoogleFonts.outfit(color: const Color(0xFF6B7280))),
-                      GestureDetector(
-                        onTap: () =>
-                            Navigator.pushNamed(context, '/register'),
-                        child: Text('Sign Up',
-                            style: GoogleFonts.outfit(
-                              color: const Color(0xFF2E86DE),
-                              fontWeight: FontWeight.w600,
-                            )),
-                      ),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
           ),
         ],
       ),
     );
   }
+
 
   Widget _buildField({
     required TextEditingController ctrl,
@@ -352,24 +355,24 @@ class _LoginScreenState extends State<LoginScreen>
     bool obscure = false,
     Widget? suffix,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.transparent),
-      ),
+    return GlassContainer(
+      height: 56,
+      borderRadius: 16,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      color: Colors.white.withValues(alpha: 0.4),
+      borderColor: Colors.white.withValues(alpha: 0.6),
       child: TextField(
         controller: ctrl,
         obscureText: obscure,
-        style: GoogleFonts.outfit(color: const Color(0xFF1F2937)),
+        style: GoogleFonts.lexend(color: AppTheme.primaryDark),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: GoogleFonts.outfit(color: const Color(0xFF9CA3AF)),
-          prefixIcon: Icon(icon, color: const Color(0xFF9CA3AF), size: 20),
+          hintStyle: GoogleFonts.lexend(color: Colors.grey.shade600),
+          prefixIcon: Icon(icon, color: Colors.grey.shade700, size: 20),
+          prefixIconConstraints: const BoxConstraints(minWidth: 40),
           suffixIcon: suffix,
           border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+          contentPadding: const EdgeInsets.symmetric(vertical: 18),
         ),
       ),
     );

@@ -44,6 +44,10 @@ export class DashboardComponent implements OnInit {
     this.loadDashboardData();
   }
 
+  navigateToSetup() {
+    this.router.navigate(['/setup']);
+  }
+
   loadDashboardData() {
     this.loading.set(true);
     this.error.set(null);
@@ -72,7 +76,11 @@ export class DashboardComponent implements OnInit {
       },
       error: (err) => {
         console.error('Error loading user:', err);
-        this.error.set('Failed to load user data');
+        if (err.status === 403) {
+          this.auth.logout(); // Use auth logout to clear state and redirect
+        } else {
+          this.error.set('Failed to load user data');
+        }
         this.loading.set(false);
       }
     });

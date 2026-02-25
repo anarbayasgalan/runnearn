@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../widgets/glass_container.dart';
+import '../widgets/mesh_background.dart';
+import '../theme.dart';
 import '../services/api_service.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -43,107 +46,147 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        color: const Color(0xFFF8F9FA), // Off-white bg
-        child: SafeArea(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator(color: Color(0xFFFF6B00)))
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Header
-                      Row(
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Hello, Runner!',
-                                  style: GoogleFonts.outfit(
-                                      fontSize: 26,
-                                      fontWeight: FontWeight.bold,
-                                      color: const Color(0xFF1F2937))),
-                              const SizedBox(height: 4),
-                              Text(
-                                _user?['userName'] ?? 'Runner',
-                                style: GoogleFonts.outfit(
-                                    fontSize: 14, color: const Color(0xFF6B7280)),
-                              ),
-                            ],
-                          ),
-                          const Spacer(),
-                          IconButton(
-                            icon: const Icon(Icons.logout, color: Color(0xFF6B7280)),
-                            onPressed: _logout,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 32),
+      backgroundColor: Colors.white,
+      body: Stack(
+        children: [
+          // 1. Background
+          const Positioned.fill(child: MeshBackground()),
 
-                      // Quick actions
-                      _actionCard(
-                        icon: Icons.directions_run,
-                        title: 'Start a Run',
-                        desc: 'Track your run with GPS',
-                        color: const Color(0xFFFF6B00), // Orange
-                        route: '/run',
+          // 2. Main Content
+          SafeArea(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator(color: AppTheme.primaryOrange))
+                : Stack(
+                    children: [
+                      SingleChildScrollView(
+                        padding: const EdgeInsets.only(left: 24, right: 24, top: 24, bottom: 120),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Header
+                            Row(
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('Hello, Runner!',
+                                        style: GoogleFonts.lexend(
+                                            fontSize: 26,
+                                            fontWeight: FontWeight.bold,
+                                            color: AppTheme.primaryDark)),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      _user?['userName'] ?? 'Runner',
+                                      style: GoogleFonts.lexend(
+                                          fontSize: 14, color: Colors.grey.shade600),
+                                    ),
+                                  ],
+                                ),
+                                const Spacer(),
+                                GlassContainer(
+                                  width: 48,
+                                  height: 48,
+                                  borderRadius: 24,
+                                  padding: EdgeInsets.zero,
+                                  child: IconButton(
+                                    icon: const Icon(Icons.logout, color: AppTheme.primaryDark),
+                                    onPressed: _logout,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 32),
+
+                            // Quick actions using GlassContainer
+                            _actionCard(
+                              icon: Icons.directions_run,
+                              title: 'Start a Run',
+                              desc: 'Track your run with GPS',
+                              color: AppTheme.primaryOrange,
+                              route: '/run',
+                            ),
+                            const SizedBox(height: 16),
+                            _actionCard(
+                              icon: Icons.emoji_events,
+                              title: 'Challenges',
+                              desc: 'Browse and accept challenges',
+                              color: AppTheme.primaryDark,
+                              route: '/challenge',
+                            ),
+                            const SizedBox(height: 16),
+                            _actionCard(
+                              icon: Icons.card_giftcard,
+                              title: 'My Rewards',
+                              desc: 'View your earned rewards',
+                              color: AppTheme.primaryDark,
+                              route: '/tokens',
+                            ),
+                            const SizedBox(height: 16),
+                            _actionCard(
+                              icon: Icons.settings,
+                              title: 'Setup Profile',
+                              desc: 'Update your company settings',
+                              color: AppTheme.primaryDark,
+                              route: '/setup',
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 16),
-                      _actionCard(
-                        icon: Icons.emoji_events,
-                        title: 'Challenges',
-                        desc: 'Browse and accept challenges',
-                        color: const Color(0xFF2E86DE), // Blue
-                        route: '/challenge',
-                      ),
-                      const SizedBox(height: 16),
-                      _actionCard(
-                        icon: Icons.card_giftcard,
-                        title: 'My Rewards',
-                        desc: 'View your earned rewards',
-                        color: const Color(0xFF10B981), // Green
-                        route: '/tokens',
+                      
+                      // 3. Floating Bottom Navigation Bar
+                      Positioned(
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        child: _buildBottomNav(),
                       ),
                     ],
                   ),
-                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNav() {
+    return Container(
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.8),
+        border: Border(top: BorderSide(color: Colors.grey.withValues(alpha: 0.2))),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildNavItem(Icons.dashboard, 0),
+            _buildNavItem(Icons.directions_run, 1),
+            _buildNavItem(Icons.emoji_events, 2),
+            _buildNavItem(Icons.card_giftcard, 3),
+          ],
         ),
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -4),
-            )
-          ],
-        ),
-        child: BottomNavigationBar(
-          backgroundColor: Colors.white,
-          elevation: 0,
-          currentIndex: _navIndex,
-          onTap: (i) {
-            setState(() => _navIndex = i);
-            switch (i) {
-              case 1: Navigator.pushNamed(context, '/run'); break;
-              case 2: Navigator.pushNamed(context, '/challenge'); break;
-              case 3: Navigator.pushNamed(context, '/tokens'); break;
-            }
-          },
-          type: BottomNavigationBarType.fixed,
-          selectedItemColor: const Color(0xFFFF6B00),
-          unselectedItemColor: const Color(0xFF9CA3AF),
-          selectedLabelStyle: GoogleFonts.outfit(fontSize: 11, fontWeight: FontWeight.w600),
-          unselectedLabelStyle: GoogleFonts.outfit(fontSize: 11),
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.directions_run), label: 'Run'),
-            BottomNavigationBarItem(icon: Icon(Icons.emoji_events), label: 'Challenges'),
-            BottomNavigationBarItem(icon: Icon(Icons.card_giftcard), label: 'Rewards'),
-          ],
+    );
+  }
+
+  Widget _buildNavItem(IconData icon, int index) {
+    final isActive = _navIndex == index;
+    return GestureDetector(
+      onTap: () {
+        setState(() => _navIndex = index);
+        switch (index) {
+          case 1: Navigator.pushNamed(context, '/run'); break;
+          case 2: Navigator.pushNamed(context, '/challenge'); break;
+          case 3: Navigator.pushNamed(context, '/tokens'); break;
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        child: Icon(
+          icon,
+          size: 28,
+          color: isActive ? AppTheme.primaryOrange : Colors.grey.shade400,
         ),
       ),
     );
@@ -158,19 +201,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }) {
     return GestureDetector(
       onTap: () => Navigator.pushNamed(context, route),
-      child: Container(
+      child: GlassContainer(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            )
-          ],
-        ),
+        borderRadius: 24,
         child: Row(
           children: [
             Container(
@@ -178,7 +211,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               height: 52,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(icon, color: color, size: 26),
             ),
@@ -188,18 +221,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(title,
-                      style: GoogleFonts.outfit(
-                          color: const Color(0xFF1F2937),
+                      style: GoogleFonts.lexend(
+                          color: AppTheme.primaryDark,
                           fontSize: 17,
-                          fontWeight: FontWeight.w600)),
+                          fontWeight: FontWeight.w700)),
                   const SizedBox(height: 4),
                   Text(desc,
-                      style: GoogleFonts.outfit(
-                          color: const Color(0xFF6B7280), fontSize: 13)),
+                      style: GoogleFonts.lexend(
+                          color: Colors.grey.shade600, fontSize: 12)),
                 ],
               ),
             ),
-            Icon(Icons.chevron_right, color: const Color(0xFFD1D5DB), size: 24),
+            Icon(Icons.chevron_right, color: AppTheme.primaryDark, size: 24),
           ],
         ),
       ),

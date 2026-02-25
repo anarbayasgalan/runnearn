@@ -1,14 +1,19 @@
 <div class="login-container">
+    <app-interactive-background></app-interactive-background>
+    <div class="gradient-overlay"></div>
+
     <div class="card login-card">
-        <h2 class="text-gradient">Join Us</h2>
-        <p style="color: var(--color-text-muted); margin-bottom: 2rem;">Create your authentic account</p>
+        <div class="brand-header">
+            <img src="assets/runnearn_logo.png" alt="Run'nEarn" class="brand-logo">
+            <p class="subtitle">Create your account</p>
+        </div>
 
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
             <div class="form-group">
                 <label>Email</label>
                 <input type="text" formControlName="userName" class="input-field" placeholder="Enter your email">
                 <div *ngIf="registerForm.get('userName')?.hasError('email') && registerForm.get('userName')?.touched"
-                    style="color: #ef4444; font-size: 0.85rem; margin-top: 0.25rem; font-weight: 500;">
+                    class="field-error">
                     Please enter a valid email address!
                 </div>
             </div>
@@ -23,22 +28,15 @@
                 <input type="password" formControlName="confirmPassword" class="input-field"
                     placeholder="Repeat password">
                 <div *ngIf="registerForm.hasError('passwordMismatch') && registerForm.get('confirmPassword')?.touched"
-                    style="color: #ef4444; font-size: 0.85rem; margin-top: 0.25rem; font-weight: 500;">
+                    class="field-error">
                     Passwords don't match!
                 </div>
             </div>
 
             <div class="form-group">
                 <label>Company Name</label>
-                <input type="text" formControlName="companyName" class="input-field">
-            </div>
-
-            <div style="font-size: 0.8rem; color: #666; margin-bottom: 1rem;">
-                Form Valid: {{ registerForm.valid }}<br>
-                Form Invalid: {{ registerForm.invalid }}<br>
-                Username: {{ registerForm.get('userName')?.valid }}<br>
-                Password: {{ registerForm.get('userPass')?.valid }}<br>
-                Company: {{ registerForm.get('companyName')?.valid }}
+                <input type="text" formControlName="companyName" class="input-field"
+                    placeholder="Enter your company name">
             </div>
 
             <div *ngIf="errorMsg" class="error-msg">
@@ -52,8 +50,7 @@
         </form>
 
         <div style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem;">
-            <a routerLink="/login" style="color: var(--color-primary); text-decoration: none;">Already have an account?
-                Sign in</a>
+            <a routerLink="/login">Already have an account? Sign in</a>
         </div>
     </div>
 </div>

@@ -5,6 +5,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import '../services/api_service.dart';
+import '../widgets/glass_container.dart';
+import '../theme.dart';
 
 class RunScreen extends StatefulWidget {
   const RunScreen({super.key});
@@ -117,7 +119,7 @@ class _RunScreenState extends State<RunScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Run saved!',
-              style: GoogleFonts.outfit()),
+              style: GoogleFonts.lexend()),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
         ));
@@ -126,7 +128,7 @@ class _RunScreenState extends State<RunScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Failed to save run',
-              style: GoogleFonts.outfit()),
+              style: GoogleFonts.lexend()),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ));
@@ -144,6 +146,7 @@ class _RunScreenState extends State<RunScreen> {
     return Scaffold(
       body: Stack(
         children: [
+          // 1. Google Map (Full Screen Background)
           GoogleMap(
             initialCameraPosition: initialPosition,
             myLocationEnabled: true,
@@ -151,106 +154,100 @@ class _RunScreenState extends State<RunScreen> {
             onMapCreated: (c) => mapController = c,
             mapType: MapType.normal,
             zoomControlsEnabled: false,
+            myLocationButtonEnabled: false,
           ),
 
-          // Back button
+          // 2. Back button (Glass)
           Positioned(
             top: 50,
             left: 16,
             child: GestureDetector(
               onTap: () => Navigator.pop(context),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                    ),
-                  ],
-                ),
+              child: GlassContainer(
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                padding: EdgeInsets.zero,
                 child: const Icon(Icons.arrow_back_ios_new,
-                    color: Color(0xFF1F2937), size: 18),
+                    color: AppTheme.primaryDark, size: 18),
               ),
             ),
           ),
 
-          // Stats Card
+          // 3. Stats Card (Glass)
           Positioned(
             top: 50,
-            left: 60,
+            left: 70,
             right: 16,
-            child: Container(
+            child: GlassContainer(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
+              borderRadius: 24,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _statBox(
                     'Distance',
                     '${(totalDistance / 1000).toStringAsFixed(2)} km',
-                    const Color(0xFF1F2937),
+                    AppTheme.primaryDark,
                   ),
                   Container(
-                      width: 1, height: 30, color: Colors.grey[200]),
+                      width: 1, height: 30, color: AppTheme.primaryDark.withValues(alpha: 0.1)),
                   _statBox(
                     'Time',
                     _formatDuration(_elapsed),
-                    const Color(0xFF1F2937),
+                    AppTheme.primaryDark,
                   ),
                   Container(
-                      width: 1, height: 30, color: Colors.grey[200]),
+                      width: 1, height: 30, color: AppTheme.primaryDark.withValues(alpha: 0.1)),
                   _statBox(
                     'Status',
                     isRunning ? '🏃' : '⏸',
-                    isRunning ? const Color(0xFFFF6B00) : const Color(0xFF9CA3AF),
+                    isRunning ? AppTheme.primaryOrange : Colors.grey.shade600,
                   ),
                 ],
               ),
             ),
           ),
 
-          // Start / Stop Button
+          // 4. Start / Stop Button (Glass over solid color)
           Positioned(
             bottom: 40,
             left: 40,
             right: 40,
-            child: GestureDetector(
-              onTap: isRunning ? stopRun : startRun,
-              child: Container(
-                height: 56,
-                decoration: BoxDecoration(
-                  color: isRunning ? const Color(0xFFEF4444) : const Color(0xFFFF6B00),
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isRunning
-                              ? const Color(0xFFEF4444)
-                              : const Color(0xFFFF6B00))
-                          .withValues(alpha: 0.4),
-                      blurRadius: 20,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Center(
-                  child: Text(
-                    isRunning ? 'STOP RUN' : 'START RUN',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(30),
+                boxShadow: [
+                  BoxShadow(
+                    color: (isRunning
+                            ? const Color(0xFFEF4444)
+                            : AppTheme.primaryOrange)
+                        .withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: GestureDetector(
+                onTap: isRunning ? stopRun : startRun,
+                child: GlassContainer(
+                  height: 60,
+                  borderRadius: 30,
+                  color: isRunning
+                      ? const Color(0xFFEF4444).withValues(alpha: 0.8)
+                      : AppTheme.primaryOrange.withValues(alpha: 0.8),
+                  borderColor: isRunning
+                      ? const Color(0xFFEF4444).withValues(alpha: 0.9)
+                      : AppTheme.primaryOrange.withValues(alpha: 0.9),
+                  child: Center(
+                    child: Text(
+                      isRunning ? 'STOP RUN' : 'START RUN',
+                      style: GoogleFonts.lexend(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                      ),
                     ),
                   ),
                 ),
@@ -267,10 +264,10 @@ class _RunScreenState extends State<RunScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(title,
-            style: GoogleFonts.outfit(color: const Color(0xFF6B7280), fontSize: 11)),
+            style: GoogleFonts.lexend(color: Colors.grey.shade700, fontSize: 11, fontWeight: FontWeight.w500)),
         const SizedBox(height: 4),
         Text(value,
-            style: GoogleFonts.outfit(
+            style: GoogleFonts.lexend(
                 color: valueColor,
                 fontSize: 15,
                 fontWeight: FontWeight.bold)),

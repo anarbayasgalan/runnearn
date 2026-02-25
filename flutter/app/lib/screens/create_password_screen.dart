@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../widgets/glass_container.dart';
+import '../services/api_service.dart';
 import '../widgets/mesh_background.dart';
+import '../widgets/glass_container.dart';
 import '../widgets/logo_widget.dart';
 import '../theme.dart';
-import '../services/api_service.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class CreatePasswordScreen extends StatefulWidget {
+  final String companyName;
+  final bool isNewUser;
+  const CreatePasswordScreen({super.key, required this.companyName, this.isNewUser = false});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<CreatePasswordScreen> createState() => _CreatePasswordScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen>
-    with SingleTickerProviderStateMixin {
-  final _userCtrl = TextEditingController();
+class _CreatePasswordScreenState extends State<CreatePasswordScreen> with SingleTickerProviderStateMixin {
+  final ApiService apiService = ApiService();
   final _passCtrl = TextEditingController();
-  final _confirmCtrl = TextEditingController();
-  bool _loading = false;
-  bool _obscure = true;
+  final _confirmPassCtrl = TextEditingController();
+  
+  bool _isLoading = false;
+  String? _errorMessage;
+  bool _obscurePass = true;
+  bool _obscureConfirm = true;
+
   late AnimationController _animCtrl;
   late Animation<double> _fadeIn;
 
@@ -35,34 +40,53 @@ class _RegisterScreenState extends State<RegisterScreen>
   @override
   void dispose() {
     _animCtrl.dispose();
-    _userCtrl.dispose();
     _passCtrl.dispose();
-    _confirmCtrl.dispose();
+    _confirmPassCtrl.dispose();
     super.dispose();
   }
 
-  Future<void> _register() async {
-    if (_userCtrl.text.isEmpty || _passCtrl.text.isEmpty) {
+  void _submit() async {
+    if (_passCtrl.text.isEmpty || _confirmPassCtrl.text.isEmpty) {
       _snack('Please fill all fields');
       return;
     }
-    if (_passCtrl.text != _confirmCtrl.text) {
+
+    if (_passCtrl.text != _confirmPassCtrl.text) {
       _snack('Passwords do not match');
       return;
     }
-    setState(() => _loading = true);
+    
+    if (_passCtrl.text.length < 6) {
+      _snack('Password must be at least 6 characters');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
-      final res = await ApiService.register(_userCtrl.text, _passCtrl.text);
-      if (!mounted) return;
-      if (res['responseCode'] == 0) {
-        Navigator.pushReplacementNamed(context, '/dashboard');
+      final response = await apiService.post('/updateUserCred', {
+        'userName': widget.companyName, 
+        'userPass': _passCtrl.text,
+      });
+
+      if (response['responseCode'] == 0 || response['responseDesc'] != null) {
+        if (mounted) {
+           if (widget.isNewUser) {
+             Navigator.pushReplacementNamed(context, '/setup');
+           } else {
+             Navigator.pushReplacementNamed(context, '/dashboard');
+           }
+        }
       } else {
-        _snack(res['responseDesc'] ?? 'Registration failed');
+         _snack(response['responseDesc'] ?? 'Failed to update credentials');
       }
     } catch (e) {
-      _snack('Connection error');
+      _snack('Network error occurred');
     } finally {
-      if (mounted) setState(() => _loading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -80,7 +104,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           // 1. Interactive Background
           const Positioned.fill(child: MeshBackground()),
 
-          // 2. Register Form
+          // 2. Form Content
           SafeArea(
             child: Center(
               child: FadeTransition(
@@ -92,56 +116,65 @@ class _RegisterScreenState extends State<RegisterScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Back button
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: IconButton(
-                            icon: Icon(Icons.arrow_back_ios,
-                                color: AppTheme.primaryDark.withValues(alpha: 0.6), size: 20),
-                            onPressed: () => Navigator.pop(context),
+                        // Logo Image
+                        const LogoWidget(logoHeight: 60),
+                        const SizedBox(height: 32),
+                        
+                        Text(
+                          'Secure Your Account',
+                          style: GoogleFonts.lexend(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.primaryDark,
                           ),
+                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
-
-                        // Logo Image
-                        const LogoWidget(logoHeight: 80),
-                        const SizedBox(height: 48),
-
-                        // Username
-                        _buildField(
-                          ctrl: _userCtrl,
-                          hint: 'Email',
-                          icon: Icons.email_outlined,
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Password
-                        _buildField(
-                          ctrl: _passCtrl,
-                          hint: 'Password',
-                          icon: Icons.lock_outline,
-                          obscure: _obscure,
-                          suffix: IconButton(
-                            icon: Icon(
-                              _obscure ? Icons.visibility_off : Icons.visibility,
-                              color: const Color(0xFF9CA3AF),
-                              size: 20,
-                            ),
-                            onPressed: () => setState(() => _obscure = !_obscure),
+                        Text(
+                          'Set a password so you can log in with your email next time.',
+                          style: GoogleFonts.lexend(
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
                           ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Confirm Password
-                        _buildField(
-                          ctrl: _confirmCtrl,
-                          hint: 'Confirm Password',
-                          icon: Icons.lock_outline,
-                          obscure: _obscure,
+                          textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 32),
 
-                        // Register Button (Matches "Select Concept" style)
+                        // Password Field
+                        _buildField(
+                          ctrl: _passCtrl,
+                          hint: 'New Password',
+                          icon: Icons.lock_outline,
+                          obscure: _obscurePass,
+                          suffix: IconButton(
+                            icon: Icon(
+                              _obscurePass ? Icons.visibility_off : Icons.visibility,
+                              color: const Color(0xFF9CA3AF),
+                              size: 20,
+                            ),
+                            onPressed: () => setState(() => _obscurePass = !_obscurePass),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Confirm Password Field
+                        _buildField(
+                          ctrl: _confirmPassCtrl,
+                          hint: 'Confirm Password',
+                          icon: Icons.lock_clock_outlined,
+                          obscure: _obscureConfirm,
+                          suffix: IconButton(
+                            icon: Icon(
+                              _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                              color: const Color(0xFF9CA3AF),
+                              size: 20,
+                            ),
+                            onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+
+                        // Submit Button
                         Container(
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(30),
@@ -154,20 +187,20 @@ class _RegisterScreenState extends State<RegisterScreen>
                             ],
                           ),
                           child: GestureDetector(
-                            onTap: _loading ? null : _register,
+                            onTap: _isLoading ? null : _submit,
                             child: GlassContainer(
                               height: 54,
                               borderRadius: 30,
                               color: AppTheme.primaryOrange.withValues(alpha: 0.3),
                               borderColor: AppTheme.primaryOrange.withValues(alpha: 0.6),
                               child: Center(
-                                child: _loading
+                                child: _isLoading
                                   ? const SizedBox(
                                       width: 22,
                                       height: 22,
                                       child: CircularProgressIndicator(
                                           strokeWidth: 2, color: AppTheme.primaryDark))
-                                  : Text('Create Account',
+                                  : Text('Save Password',
                                       style: GoogleFonts.lexend(
                                           fontSize: 16,
                                           color: AppTheme.primaryDark,
@@ -175,23 +208,6 @@ class _RegisterScreenState extends State<RegisterScreen>
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('Already have an account? ',
-                                style: GoogleFonts.lexend(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey.shade700)),
-                            GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: Text('Sign In',
-                                  style: GoogleFonts.lexend(
-                                    color: AppTheme.primaryOrange,
-                                    fontWeight: FontWeight.w600,
-                                  )),
-                            ),
-                          ],
                         ),
                       ],
                     ),

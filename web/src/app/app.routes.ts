@@ -4,6 +4,7 @@ import { RegisterComponent } from './pages/register/register.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { SetupProfileComponent } from './pages/setup-profile/setup-profile.component';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
+import { CreatePasswordComponent } from './pages/create-password/create-password.component';
 
 export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' },
@@ -11,5 +12,6 @@ export const routes: Routes = [
     { path: 'register', component: RegisterComponent },
     { path: 'dashboard', component: DashboardComponent },
     { path: 'setup', component: SetupProfileComponent },
-    { path: 'forgot-password', component: ForgotPasswordComponent }
+    { path: 'forgot-password', component: ForgotPasswordComponent },
+    { path: 'create-password', component: CreatePasswordComponent }
 ];

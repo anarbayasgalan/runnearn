@@ -237,12 +237,22 @@ public class MainService {
         // 3. Generate Session
         String session = generateSession(user.getUserId(), user.getUserType());
 
+        // 4. Check if password exists
+        boolean isMissingPassword = false;
+        UserCredPK pk = new UserCredPK();
+        pk.setUserId(user.getUserId());
+        pk.setUserName(user.getUserName());
+        if (param.getUserCred(pk) == null) {
+            isMissingPassword = true;
+        }
+
         LoginRes res = new LoginRes();
         res.setResponseCode(0);
         res.setResponseDesc("Login successful");
         res.setSession(session);
         res.setUserType(user.getUserType());
         res.setNewUser(isNewUser);
+        res.setMissingPassword(isMissingPassword);
 
         return res;
     }

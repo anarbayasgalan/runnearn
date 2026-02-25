@@ -94,9 +94,13 @@ export class LoginComponent implements OnInit {
       next: (res) => {
         this.isLoading = false;
         if (res.responseCode === 0) {
-          if (res.isNewUser) {
-            this.router.navigate(['/setup'], {
-              state: { companyName: user.name || '' } // pass name as default company name
+          console.log("LOGIN RES", res);
+          if (res.missingPassword) {
+            this.router.navigate(['/create-password'], {
+              state: {
+                companyName: user.name || '',
+                isNewUser: res.isNewUser || res.newUser
+              }
             });
           } else {
             this.router.navigate(['/dashboard']);

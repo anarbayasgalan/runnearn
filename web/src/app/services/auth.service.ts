@@ -78,6 +78,10 @@ export class AuthService {
     return this.api.post<any>('/updateCompany', data);
   }
 
+  updateUserCred(data: { userName: string; userPass: string }) {
+    return this.api.post<any>('/updateUserCred', data);
+  }
+
   getCurrentUser() {
     return this.api.get<any>('/home');
   }

@@ -42,6 +42,8 @@ public class ParamService {
             UserCred existing = user.get();
             existing.setUserPass(u.getUserPass());
             userCredRepository.save(existing);
+        } else {
+            userCredRepository.save(u);
         }
     }
 

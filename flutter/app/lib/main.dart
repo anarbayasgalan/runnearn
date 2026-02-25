@@ -7,6 +7,7 @@ import 'screens/dashboard_screen.dart';
 import 'screens/challenge_screen.dart';
 import 'screens/run_screen.dart';
 import 'screens/tokens_screen.dart';
+import 'screens/brand_identity_screen.dart';
 import 'services/api_service.dart';
 
 void main() {
@@ -24,18 +25,27 @@ class RunEarnApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.light,
         scaffoldBackgroundColor: const Color(0xFFF8F9FA),
-        primaryColor: const Color(0xFFFF6B00),
-        textTheme: GoogleFonts.outfitTextTheme(
+        primaryColor: const Color(0xFFF48C25),
+        textTheme: GoogleFonts.lexendTextTheme(
           ThemeData.light().textTheme,
         ),
         colorScheme: const ColorScheme.light(
-          primary: Color(0xFFFF6B00),
-          secondary: Color(0xFF2E86DE),
+          primary: Color(0xFFF48C25),
+          secondary: Color(0xFF1C1C1C),
           surface: Colors.white,
           error: Color(0xFFEF4444),
         ),
         useMaterial3: true,
       ),
+      builder: (context, child) {
+        // Constrain to mobile width on web/desktop
+        return Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 430),
+            child: child,
+          ),
+        );
+      },
       home: const SplashGate(),
       routes: {
         '/login': (_) => const LoginScreen(),
@@ -44,6 +54,7 @@ class RunEarnApp extends StatelessWidget {
         '/run': (_) => const RunScreen(),
         '/challenge': (_) => const ChallengeScreen(),
         '/tokens': (_) => const TokensScreen(),
+        '/brand': (_) => const BrandIdentityScreen(),
       },
     );
   }
