@@ -1,0 +1,65 @@
+<div class="setup-container">
+    <div class="setup-card glass-panel card">
+        <div class="setup-header">
+            <h1 class="setup-title">Setup Company Profile</h1>
+            <p class="setup-subtitle">Complete your profile to start creating tokens!</p>
+        </div>
+
+        <div *ngIf="errorMsg" class="error-message">
+            {{ errorMsg }}
+        </div>
+
+        <form [formGroup]="setupForm" (ngSubmit)="onSubmit()">
+            <!-- Photo Upload Section -->
+            <div class="photo-upload-section">
+                <div class="photo-preview-wrap" (click)="fileInput.click()">
+                    <img *ngIf="previewUrl" [src]="previewUrl" alt="Company Logo" class="preview-img">
+                    <div *ngIf="!previewUrl" class="upload-placeholder">
+                        <div class="upload-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="16" />
+                                <line x1="8" y1="12" x2="16" y2="12" />
+                            </svg>
+                        </div>
+                        <span>Upload Logo</span>
+                    </div>
+                </div>
+                <input type="file" #fileInput class="hidden-input" (change)="onFileSelected($event)" accept="image/*">
+                <p class="hint">Recommended: Square logo, max 2MB</p>
+            </div>
+
+            <!-- Company Name -->
+            <div class="form-group">
+                <label for="companyName">Company Name</label>
+                <input type="text" id="companyName" formControlName="companyName" class="input-field"
+                    placeholder="Enter your business name">
+                <div *ngIf="setupForm.get('companyName')?.touched && setupForm.get('companyName')?.invalid"
+                    class="error-hint">
+                    Company name is required.
+                </div>
+            </div>
+
+            <!-- Details -->
+            <div class="form-group">
+                <label for="details">Company Description</label>
+                <textarea id="details" formControlName="details" class="input-field textarea-field"
+                    placeholder="Tell us about your company and what you offer..."></textarea>
+                <p class="hint">This will be visible to your customers.</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="btn-group">
+                <button type="submit" class="btn btn-primary" [disabled]="setupForm.invalid || isLoading">
+                    <span *ngIf="!isLoading">Save Profile</span>
+                    <span *ngIf="isLoading" class="spinner"></span>
+                </button>
+                <button type="button" class="btn btn-outline" (click)="skipSetup()" [disabled]="isLoading">
+                    Skip for now
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

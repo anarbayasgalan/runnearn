@@ -5,7 +5,11 @@ import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 
 @Component({
-  // ... rest of imports
+  selector: 'app-setup-profile',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule],
+  templateUrl: './setup-profile.component.html',
+  styleUrl: './setup-profile.component.css'
 })
 export class SetupProfileComponent implements OnInit {
   setupForm: FormGroup;
