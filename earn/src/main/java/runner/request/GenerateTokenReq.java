@@ -15,4 +15,5 @@ public class GenerateTokenReq {
     String challenge;
     Integer quantity;
     Double requiredDistance;
+    Double requiredPace;
 }

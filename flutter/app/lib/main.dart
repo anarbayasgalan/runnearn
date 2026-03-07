@@ -8,6 +8,7 @@ import 'screens/challenge_screen.dart';
 import 'screens/run_screen.dart';
 import 'screens/tokens_screen.dart';
 import 'screens/brand_identity_screen.dart';
+import 'screens/leaderboard_screen.dart';
 import 'services/api_service.dart';
 
 void main() {
@@ -55,6 +56,7 @@ class RunEarnApp extends StatelessWidget {
         '/challenge': (_) => const ChallengeScreen(),
         '/tokens': (_) => const TokensScreen(),
         '/brand': (_) => const BrandIdentityScreen(),
+        '/leaderboard': (_) => const LeaderboardScreen(),
       },
     );
   }

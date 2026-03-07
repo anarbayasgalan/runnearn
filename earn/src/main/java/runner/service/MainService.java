@@ -43,6 +43,11 @@ public class MainService {
     private String facebookAppSecret;
     @Autowired
     private JwtService jwtService;
+    @Autowired
+    private RedisService redisService;
+
+    @Value("${jwt.expiration-minutes:5}")
+    private long jwtExpirationMinutes;
 
     private static final Logger log = LoggerFactory.getLogger(MainService.class);
 
@@ -264,11 +269,13 @@ public class MainService {
         dbSession.setSession(sessionId);
         dbSession.setUserId(userId);
         dbSession.setStatus(1);
-        dbSession.setExpireDate(Core.getNow().plusMinutes(5));
+        dbSession.setExpireDate(Core.getNow().plusMinutes(jwtExpirationMinutes));
         param.addUserSession(dbSession);
 
-        // Return JWT as the primary token
-        return jwtService.generateToken(userId, userType);
+        // Generate JWT and cache it in Redis for fast auth on subsequent requests
+        String token = jwtService.generateToken(userId, userType);
+        redisService.cacheSession(token, userId, jwtExpirationMinutes);
+        return token;
     }
 
     private CreateUserRes createUser(CreateUserReq req) {
@@ -310,10 +317,14 @@ public class MainService {
 
         // Get userId from SecurityContext (set by AuthenticationFilter)
         String userId = (String) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = param.findUser(userId);
+        if (user == null) {
+            throw new RunnerException(1, "User not found");
+        }
 
         UserCredPK pk = new UserCredPK();
         pk.setUserId(userId);
-        pk.setUserName(req.getUserName());
+        pk.setUserName(user.getUserName());
 
         UserCred p = new UserCred();
         p.setId(pk);
@@ -367,6 +378,7 @@ public class MainService {
                     token.setPrice(req.getPrice());
                     token.setChallenge(req.getChallenge());
                     token.setRequiredDistance(req.getRequiredDistance());
+                    token.setRequiredPace(req.getRequiredPace());
                     param.addToken(token);
 
                     tokenCodes.add(tkn);
@@ -420,17 +432,26 @@ public class MainService {
                 Token t = param.findTokenByTkn(req.getToken());
 
                 if (t != null) {
-                    if ((t.getExpireDate() != null && t.getExpireDate().isAfter(Core.getNow())
-                            && Core.equal(t.getStatus(), 1))
-                            || Core.equal(t.getStatus(), 1)) {
-                        // 4. successfully redeemed.
-                        t.setStatus(0);
-                        t.setRedeemedDate(Core.getNow());
-                        param.updateToken(t);
-                        res.setResponseDesc("Token is successfully redeemed.");
-                    } else {
-                        throw new RunnerException(6, "Token is expired!");
+                    if (t.getStatus() == 0) {
+                        throw new RunnerException(6, "Token is already redeemed!");
                     }
+                    if (t.getStatus() == 1 || t.getUserId() == null) {
+                        throw new RunnerException(7, "Token has not been claimed by a runner yet!");
+                    }
+                    if (t.getExpireDate() != null && t.getExpireDate().isBefore(Core.getNow())) {
+                        throw new RunnerException(8, "Token has expired!");
+                    }
+
+                    // 4. successfully redeemed.
+                    t.setStatus(0);
+                    t.setRedeemedDate(Core.getNow());
+                    param.updateToken(t);
+
+                    User runner = param.findUser(t.getUserId());
+                    String runnerName = (runner != null && runner.getUserName() != null) ? runner.getUserName()
+                            : "a runner";
+                    res.setRunnerName(runnerName);
+                    res.setResponseDesc("Successfully redeemed for " + runnerName);
                 } else {
                     throw new RunnerException(5, "Incorrect token!");
                 }

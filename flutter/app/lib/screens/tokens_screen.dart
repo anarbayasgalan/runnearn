@@ -128,6 +128,7 @@ class _TokensScreenState extends State<TokensScreen> {
     final challenge = token['challenge'] ?? 'Challenge';
     final price = token['price'] ?? 'Reward';
     final company = token['companyName'] ?? 'Unknown';
+    final tkn = token['tkn'] ?? '';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -178,6 +179,21 @@ class _TokensScreenState extends State<TokensScreen> {
                       ),
                     ],
                   ),
+                  if (tkn.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: SelectableText(tkn,
+                          style: GoogleFonts.courierPrime(
+                              color: AppTheme.primaryDark,
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold)),
+                    ),
+                  ]
                 ],
               ),
             ),

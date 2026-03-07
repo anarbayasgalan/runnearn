@@ -51,4 +51,7 @@ public class Token {
     @Column(name = "required_distance")
     private Double requiredDistance;
 
+    @Column(name = "required_pace")
+    private Double requiredPace; // min/km e.g. 5.5 = 5:30/km
+
 }

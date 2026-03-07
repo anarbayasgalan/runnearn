@@ -126,11 +126,17 @@ class ApiService {
   }
 
   // ── Run ─────────────────────────────────────────────────────────
-  static Future<void> saveRun(double distance, List<Map<String, double>> route) async {
+  static Future<void> saveRun(double distance, List<Map<String, double>> route,
+      {double? pace, int? durationSeconds}) async {
     await http.post(
       Uri.parse('$baseUrl/run'),
       headers: await _headers(),
-      body: jsonEncode({'distance': distance, 'route': route}),
+      body: jsonEncode({
+        'distance': distance,
+        'route': route,
+        if (pace != null) 'pace': pace,
+        if (durationSeconds != null) 'durationSeconds': durationSeconds,
+      }),
     );
   }
 
@@ -138,6 +144,15 @@ class ApiService {
     final res = await http.get(
       Uri.parse('$baseUrl/runs/total-distance'),
       headers: await _headers(),
+    );
+    return jsonDecode(res.body) as Map<String, dynamic>;
+  }
+
+  static Future<Map<String, dynamic>> updateUserCred(String userName, String userPass) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/updateUserCred'),
+      headers: await _headers(),
+      body: jsonEncode({'userName': userName, 'userPass': userPass}),
     );
     return jsonDecode(res.body) as Map<String, dynamic>;
   }
@@ -151,5 +166,29 @@ class ApiService {
       return jsonDecode(res.body) as List<dynamic>;
     }
     return [];
+  }
+
+  static Future<List<dynamic>> getLeaderboard() async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/leaderboard'),
+      headers: await _headers(),
+    );
+    if (res.statusCode == 200) {
+      return jsonDecode(res.body) as List<dynamic>;
+    }
+    return [];
+  }
+
+  static Future<void> logout() async {
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/logout'),
+        headers: await _headers(),
+      );
+    } catch (_) {
+      // Ignore network errors on logout
+    } finally {
+      await clearSession();
+    }
   }
 }

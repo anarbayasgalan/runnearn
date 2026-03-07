@@ -16,6 +16,7 @@ public class GetTokenRes {
     private String price;
     private String challenge;
     private Double requiredDistance;
+    private Double requiredPace;
     private LocalDateTime createdDate;
     private LocalDateTime expireDate;
     private LocalDateTime redeemedDate;
@@ -30,6 +31,7 @@ public class GetTokenRes {
         dto.setPrice(token.getPrice());
         dto.setChallenge(token.getChallenge());
         dto.setRequiredDistance(token.getRequiredDistance());
+        dto.setRequiredPace(token.getRequiredPace());
         dto.setCreatedDate(token.getCreatedDate());
         dto.setExpireDate(token.getExpireDate());
         dto.setRedeemedDate(token.getRedeemedDate());

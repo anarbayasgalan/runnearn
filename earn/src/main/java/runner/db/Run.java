@@ -21,6 +21,13 @@ public class Run {
 
     private double distance;
 
+    /** Pace in min/km (e.g. 5.5 = 5 min 30 sec per km) */
+    private Double pace;
+
+    /** Total run duration in seconds */
+    @Column(name = "duration_seconds")
+    private Long durationSeconds;
+
     @Column(name = "created_date")
     private LocalDateTime createdDate;
 

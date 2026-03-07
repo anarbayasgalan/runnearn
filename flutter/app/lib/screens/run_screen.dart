@@ -23,6 +23,7 @@ class _RunScreenState extends State<RunScreen> {
   bool isRunning = false;
   List<LatLng> route = [];
   double totalDistance = 0;
+  double _currentPace = 0; // min/km
   final Set<Polyline> polylines = {};
 
   DateTime? _startTime;
@@ -72,6 +73,12 @@ class _RunScreenState extends State<RunScreen> {
 
       if (route.isNotEmpty) {
         totalDistance += _calculateDistance(route.last, point);
+        // Pace = elapsed minutes / distance in km
+        final elapsedMinutes = _elapsed.inSeconds / 60.0;
+        final distanceKm = totalDistance / 1000.0;
+        if (distanceKm > 0) {
+          _currentPace = elapsedMinutes / distanceKm;
+        }
       }
       route.add(point);
       _updatePolyline();
@@ -115,11 +122,15 @@ class _RunScreenState extends State<RunScreen> {
     final routeData =
         route.map((p) => {'lat': p.latitude, 'lng': p.longitude}).toList();
     try {
-      await ApiService.saveRun(totalDistance, routeData);
+      await ApiService.saveRun(
+        totalDistance,
+        routeData,
+        pace: _currentPace > 0 ? _currentPace : null,
+        durationSeconds: _elapsed.inSeconds,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Run saved!',
-              style: GoogleFonts.lexend()),
+          content: Text('Run saved!', style: GoogleFonts.lexend()),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
         ));
@@ -127,8 +138,7 @@ class _RunScreenState extends State<RunScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Failed to save run',
-              style: GoogleFonts.lexend()),
+          content: Text('Failed to save run', style: GoogleFonts.lexend()),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ));
@@ -139,6 +149,14 @@ class _RunScreenState extends State<RunScreen> {
   String _formatDuration(Duration d) {
     String two(int n) => n.toString().padLeft(2, '0');
     return '${two(d.inHours)}:${two(d.inMinutes.remainder(60))}:${two(d.inSeconds.remainder(60))}';
+  }
+
+  /// Format pace as mm:ss /km  (e.g. 5:30 /km)
+  String _formatPace(double paceMinPerKm) {
+    if (paceMinPerKm <= 0) return '--:-- /km';
+    final mins = paceMinPerKm.floor();
+    final secs = ((paceMinPerKm - mins) * 60).round();
+    return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')} /km';
   }
 
   @override
@@ -196,6 +214,13 @@ class _RunScreenState extends State<RunScreen> {
                     'Time',
                     _formatDuration(_elapsed),
                     AppTheme.primaryDark,
+                  ),
+                  Container(
+                      width: 1, height: 30, color: AppTheme.primaryDark.withValues(alpha: 0.1)),
+                  _statBox(
+                    'Pace',
+                    _formatPace(_currentPace),
+                    AppTheme.primaryOrange,
                   ),
                   Container(
                       width: 1, height: 30, color: AppTheme.primaryDark.withValues(alpha: 0.1)),

@@ -14,6 +14,7 @@ public class ChallengeDTO {
     private String price;
     private String challenge;
     private Double requiredDistance;
+    private Double requiredPace;
     private LocalDateTime expireDate;
     private LocalDateTime createdDate;
 
@@ -24,8 +25,9 @@ public class ChallengeDTO {
         dto.setPrice(token.getPrice());
         dto.setChallenge(token.getChallenge());
         dto.setRequiredDistance(token.getRequiredDistance());
+        dto.setRequiredPace(token.getRequiredPace());
         dto.setExpireDate(token.getExpireDate());
         dto.setCreatedDate(token.getCreatedDate());
         return dto;
-}
+    }
 }

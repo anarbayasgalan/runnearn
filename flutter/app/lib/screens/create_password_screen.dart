@@ -16,7 +16,6 @@ class CreatePasswordScreen extends StatefulWidget {
 }
 
 class _CreatePasswordScreenState extends State<CreatePasswordScreen> with SingleTickerProviderStateMixin {
-  final ApiService apiService = ApiService();
   final _passCtrl = TextEditingController();
   final _confirmPassCtrl = TextEditingController();
   
@@ -67,10 +66,10 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> with Single
     });
 
     try {
-      final response = await apiService.post('/updateUserCred', {
-        'userName': widget.companyName, 
-        'userPass': _passCtrl.text,
-      });
+      final response = await ApiService.updateUserCred(
+        widget.companyName,
+        _passCtrl.text,
+      );
 
       if (response['responseCode'] == 0 || response['responseDesc'] != null) {
         if (mounted) {
@@ -116,8 +115,8 @@ class _CreatePasswordScreenState extends State<CreatePasswordScreen> with Single
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Logo Image
-                        const LogoWidget(logoHeight: 60),
+                        // Logo smaller so keyboard fits better
+                        const LogoWidget(logoWidth: 160),
                         const SizedBox(height: 32),
                         
                         Text(

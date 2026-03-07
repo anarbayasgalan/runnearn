@@ -31,11 +31,20 @@ public class RunController {
 
         Run run = new Run();
         run.setUserId(userId);
-        run.setDistance(
-                Double.parseDouble(data.get("distance").toString()));
+        run.setDistance(Double.parseDouble(data.get("distance").toString()));
         run.setCreatedDate(Core.getNow());
-        run.setRouteJson(
-                objectMapper.writeValueAsString(data.get("route")));
+        run.setRouteJson(objectMapper.writeValueAsString(data.get("route")));
+
+        // Save pace (min/km) if provided
+        if (data.get("pace") != null) {
+            run.setPace(Double.parseDouble(data.get("pace").toString()));
+        }
+
+        // Save duration in seconds if provided
+        if (data.get("durationSeconds") != null) {
+            run.setDurationSeconds(Long.parseLong(data.get("durationSeconds").toString()));
+        }
+
         return runRepo.save(run);
     }
 

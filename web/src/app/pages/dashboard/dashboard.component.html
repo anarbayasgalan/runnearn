@@ -1,7 +1,9 @@
 <nav class="nav-bar">
     <div class="nav-content">
         <div class="nav-brand">
-            <img src="assets/runnearn_logo.png" alt="Run'nEarn" class="nav-logo">
+            <a routerLink="/dashboard" style="display:flex;align-items:center;">
+                <img src="assets/runnearn_logo.png" alt="Run'nEarn" class="nav-logo">
+            </a>
         </div>
         <div class="nav-actions">
             <span class="nav-company" *ngIf="company()?.company">{{ company()?.company }}</span>
@@ -84,7 +86,16 @@
 
         <!-- Token Lists -->
         <div class="tokens-section card">
-            <h2 class="section-title">Your Tokens</h2>
+            <div class="section-header-row">
+                <h2 class="section-title">Your Tokens</h2>
+                <div class="page-size-selector">
+                    <label>Show</label>
+                    <select [ngModel]="PAGE_SIZE" (ngModelChange)="setPageSize($event)" class="page-size-select">
+                        <option *ngFor="let opt of PAGE_SIZE_OPTIONS" [ngValue]="opt">{{ opt }}</option>
+                    </select>
+                    <label>per page</label>
+                </div>
+            </div>
 
             <!-- Active Tokens -->
             <div class="token-group">
@@ -110,7 +121,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let token of getActiveTokens()">
+                            <tr *ngFor="let token of getPagedActiveTokens()">
                                 <td><code class="token-code">{{ token.tkn }}</code></td>
                                 <td>{{ token.price || 'N/A' }}</td>
                                 <td class="challenge-cell">
@@ -122,11 +133,22 @@
                                 </td>
                                 <td>
                                     <span *ngIf="isExpired(token)" class="badge badge-expired">Expired</span>
-                                    <span *ngIf="!isExpired(token)" class="badge badge-active">Active</span>
+                                    <span *ngIf="!isExpired(token) && token.status === 1"
+                                        class="badge badge-active">Active</span>
+                                    <span *ngIf="!isExpired(token) && token.status === 2" class="badge"
+                                        style="background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">Claimed</span>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                    <!-- Pagination -->
+                    <div class="pagination" *ngIf="activeTotalPages > 1">
+                        <button class="page-btn" (click)="activeTokenPage = activeTokenPage - 1"
+                            [disabled]="activeTokenPage === 0">‹ Prev</button>
+                        <span class="page-info">{{ activeTokenPage + 1 }} / {{ activeTotalPages }}</span>
+                        <button class="page-btn" (click)="activeTokenPage = activeTokenPage + 1"
+                            [disabled]="activeTokenPage >= activeTotalPages - 1">Next ›</button>
+                    </div>
                 </div>
             </div>
 
@@ -153,7 +175,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr *ngFor="let token of getRedeemedTokens()" class="row-muted">
+                            <tr *ngFor="let token of getPagedRedeemedTokens()" class="row-muted">
                                 <td><code class="token-code redeemed">{{ token.tkn }}</code></td>
                                 <td>{{ token.price || 'N/A' }}</td>
                                 <td class="challenge-cell">
@@ -167,6 +189,14 @@
                             </tr>
                         </tbody>
                     </table>
+                    <!-- Pagination -->
+                    <div class="pagination" *ngIf="redeemedTotalPages > 1">
+                        <button class="page-btn" (click)="redeemedTokenPage = redeemedTokenPage - 1"
+                            [disabled]="redeemedTokenPage === 0">‹ Prev</button>
+                        <span class="page-info">{{ redeemedTokenPage + 1 }} / {{ redeemedTotalPages }}</span>
+                        <button class="page-btn" (click)="redeemedTokenPage = redeemedTokenPage + 1"
+                            [disabled]="redeemedTokenPage >= redeemedTotalPages - 1">Next ›</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -181,10 +211,21 @@
             </div>
 
             <div *ngIf="!redeemResult()">
-                <div class="form-group">
+                <div class="form-group autocomplete-wrap">
                     <label for="redeemCode">Enter Token Code</label>
-                    <input type="text" id="redeemCode" [(ngModel)]="redeemCode" placeholder="Enter code here..."
-                        class="input-field">
+                    <input type="text" id="redeemCode" [(ngModel)]="redeemCode"
+                        placeholder="Start typing to search tokens..." class="input-field" autocomplete="off"
+                        (focus)="showSuggestions = true"
+                        (blur)="$event.relatedTarget ? null : (showSuggestions = false)"
+                        (input)="showSuggestions = true">
+                    <div class="suggestions-dropdown" *ngIf="showSuggestions && filteredSuggestions.length > 0">
+                        <div *ngFor="let t of filteredSuggestions" class="suggestion-item"
+                            (mousedown)="selectSuggestion(t.tkn)">
+                            <code class="sugg-code">{{ t.tkn }}</code>
+                            <span class="sugg-challenge">{{ t.challenge }}</span>
+                        </div>
+                    </div>
+                    <small class="hint" *ngIf="!redeemCode">Type a token code or challenge name to search.</small>
                 </div>
 
                 <div class="form-group">
@@ -203,15 +244,23 @@
             </div>
 
             <div *ngIf="redeemResult()">
-                <div *ngIf="redeemResult().responseCode === 0" class="result-box result-success">
-                    <span class="result-icon">✅</span>
-                    <h3>Success!</h3>
-                    <p>{{ redeemResult().responseDesc }}</p>
+                <div *ngIf="redeemResult().responseCode === 0" class="result-box result-success glass-panel">
+                    <div class="animated-icon-wrap">
+                        <div class="icon-circle success">
+                            <span class="check-mark"></span>
+                        </div>
+                    </div>
+                    <h3 class="result-title">Success!</h3>
+                    <p class="result-desc">{{ redeemResult().responseDesc }}</p>
                 </div>
-                <div *ngIf="redeemResult().responseCode !== 0" class="result-box result-error">
-                    <span class="result-icon">❌</span>
-                    <h3>Error</h3>
-                    <p>{{ redeemResult().responseDesc }}</p>
+                <div *ngIf="redeemResult().responseCode !== 0" class="result-box result-error glass-panel">
+                    <div class="animated-icon-wrap">
+                        <div class="icon-circle error">
+                            <span class="cross-mark"></span>
+                        </div>
+                    </div>
+                    <h3 class="result-title">Redemption Failed</h3>
+                    <p class="result-desc">{{ redeemResult().responseDesc }}</p>
                 </div>
                 <button (click)="closeRedeemModal()" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
                     Close
@@ -222,79 +271,122 @@
 
     <!-- Create Modal -->
     <div *ngIf="showCreateModal()" class="modal-overlay" (click)="closeCreateModal()">
-        <div class="modal-content card" (click)="$event.stopPropagation()">
+        <div class="modal-content card modal-flex" (click)="$event.stopPropagation()">
+
+            <!-- Sticky Header -->
             <div class="modal-header">
                 <h2>Create New Token</h2>
-                <button (click)="closeCreateModal()" class="modal-close">×</button>
+                <button (click)="closeCreateModal()" class="btn btn-outline btn-cancel">Cancel</button>
             </div>
 
-            <div *ngIf="!createdToken()">
-                <form [formGroup]="tokenForm" (ngSubmit)="createToken()">
-                    <div class="form-group">
-                        <label>Expiry Date</label>
-                        <input type="date" formControlName="expireDate" class="input-field" [min]="getCurrentDate()"
-                            required>
-                        <small class="hint">When should these tokens expire?</small>
-                    </div>
-                    <div class="form-group">
-                        <label>Price/Discount</label>
-                        <input type="text" formControlName="price" class="input-field" placeholder="e.g., 5% discount"
-                            required>
-                        <small class="hint">What's the offer?</small>
-                    </div>
-                    <div class="form-group">
-                        <label>Challenge/Goal</label>
-                        <textarea formControlName="challenge" class="input-field" rows="3"
-                            placeholder="e.g., 10km in 4:00 pace" required></textarea>
-                        <small class="hint">What's the running challenge to complete?</small>
-                    </div>
-                    <div class="form-group">
-                        <label>Required Distance (km)</label>
-                        <input type="number" formControlName="requiredDistance" class="input-field"
-                            placeholder="e.g., 10" step="0.1" min="0">
-                        <small class="hint">Minimum km required. Leave empty for no requirement.</small>
-                    </div>
-                    <div class="form-group">
-                        <label>Number of Tokens</label>
-                        <input type="number" formControlName="quantity" class="input-field" min="1" max="100" required>
-                        <small class="hint">How many people can redeem this? (Max: 100)</small>
-                    </div>
-                    <div class="form-group">
-                        <label>Confirm Password</label>
-                        <input type="password" formControlName="userPass" class="input-field"
-                            placeholder="Enter your password" required>
-                        <small class="hint">Verify your identity to create tokens</small>
-                    </div>
+            <!-- Scrollable Body -->
+            <div class="modal-body">
+                <div *ngIf="!createdToken()">
+                    <form [formGroup]="tokenForm" id="createTokenForm" (ngSubmit)="createToken()">
+                        <div class="form-group">
+                            <label>Expiry Date</label>
+                            <input type="date" formControlName="expireDate" class="input-field" [min]="getCurrentDate()"
+                                required>
+                            <small class="hint">When should these tokens expire?</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Price/Discount</label>
+                            <input type="text" formControlName="price" class="input-field"
+                                placeholder="e.g., 5% discount" required>
+                            <small class="hint">What's the offer?</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Challenge Description</label>
+                            <input type="text" formControlName="challenge" class="input-field"
+                                placeholder="e.g., Run 5km at a good pace" required>
+                            <small class="hint">Short title for this challenge.</small>
+                        </div>
+                        <div class="challenge-row">
+                            <div class="form-group">
+                                <label>Required Distance (km)</label>
+                                <input type="number" formControlName="requiredDistance" class="input-field"
+                                    placeholder="e.g., 5" step="0.1" min="0">
+                                <small class="hint">Minimum km to complete. Leave empty for no requirement.</small>
+                            </div>
+                            <div class="form-group">
+                                <label>Required Pace (min/km)</label>
+                                <input type="text" formControlName="requiredPace" class="input-field"
+                                    placeholder="e.g., 5:00" (input)="onPaceInput($event)" inputmode="numeric">
+                                <small class="hint">Format: mm:ss (e.g. 5:30). Leave empty for no pace
+                                    requirement.</small>
+                                <small class="error-hint"
+                                    *ngIf="tokenForm.get('requiredPace')?.errors?.['pattern'] && tokenForm.get('requiredPace')?.dirty">
+                                    Use mm:ss format (e.g. 5:00, 10:30)
+                                </small>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Number of Tokens</label>
+                            <input type="number" formControlName="quantity" class="input-field" min="1" max="100"
+                                required>
+                            <small class="hint">How many people can redeem this? (Max: 100)</small>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <input type="password" formControlName="userPass" class="input-field"
+                                placeholder="Enter your password" required>
+                            <small class="hint">Verify your identity to create tokens</small>
+                        </div>
+                    </form>
+                </div>
 
-                    <button type="submit" [disabled]="tokenForm.invalid || tokenLoading()" class="btn btn-primary"
-                        style="width: 100%;">
-                        <span *ngIf="!tokenLoading()">Create Tokens</span>
-                        <span *ngIf="tokenLoading()">Creating...</span>
-                    </button>
-                </form>
-            </div>
-
-            <div *ngIf="createdToken()">
-                <div *ngIf="createdToken().responseCode === 0" class="result-box result-success">
-                    <span class="result-icon">🎉</span>
-                    <h3>Tokens Created!</h3>
-                    <p>{{ createdToken().responseDesc }}</p>
-                    <div *ngIf="createdToken().tokens && createdToken().tokens.length > 0" class="created-tokens-list">
-                        <div *ngFor="let token of createdToken().tokens; let i = index" class="created-token-item">
-                            <span class="token-label">Token {{ i + 1 }}:</span>
-                            <code class="token-code">{{ token }}</code>
+                <div *ngIf="createdToken()">
+                    <div *ngIf="createdToken().responseCode === 0" class="result-box result-success glass-panel">
+                        <div class="animated-icon-wrap">
+                            <div class="icon-circle success">
+                                <span class="check-mark"></span>
+                            </div>
+                        </div>
+                        <h3 class="result-title">Tokens Created!</h3>
+                        <p class="result-desc">{{ createdToken().responseDesc }}</p>
+                        <div *ngIf="createdToken().tokens && createdToken().tokens.length > 0"
+                            class="created-tokens-list">
+                            <div *ngFor="let token of createdToken().tokens; let i = index"
+                                class="created-token-item glass-card">
+                                <div class="token-header">
+                                    <span class="token-label">Token {{ i + 1 }}</span>
+                                    <button class="copy-btn" (click)="copyToClipboard(token)" title="Copy Code">
+                                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor"
+                                            stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <code class="token-code-large">{{ token }}</code>
+                            </div>
                         </div>
                     </div>
+                    <div *ngIf="createdToken().responseCode !== 0" class="result-box result-error glass-panel">
+                        <div class="animated-icon-wrap">
+                            <div class="icon-circle error">
+                                <span class="cross-mark"></span>
+                            </div>
+                        </div>
+                        <h3 class="result-title">Creation Failed</h3>
+                        <p class="result-desc">{{ createdToken().responseDesc }}</p>
+                    </div>
                 </div>
-                <div *ngIf="createdToken().responseCode !== 0" class="result-box result-error">
-                    <span class="result-icon">❌</span>
-                    <h3>Error</h3>
-                    <p>{{ createdToken().responseDesc }}</p>
-                </div>
-                <button (click)="closeCreateModal()" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">
+            </div>
+
+            <!-- Sticky Footer -->
+            <div class="modal-footer">
+                <button *ngIf="!createdToken()" type="button" (click)="createToken()"
+                    [disabled]="tokenForm.invalid || tokenLoading()" class="btn btn-primary" style="width: 100%;">
+                    <span *ngIf="!tokenLoading()">Confirm &amp; Create</span>
+                    <span *ngIf="tokenLoading()">Creating...</span>
+                </button>
+                <button *ngIf="createdToken()" (click)="closeCreateModal()" class="btn btn-primary"
+                    style="width: 100%;">
                     Close
                 </button>
             </div>
+
         </div>
     </div>
 </div>

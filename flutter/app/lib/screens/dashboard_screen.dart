@@ -4,6 +4,7 @@ import '../widgets/glass_container.dart';
 import '../widgets/mesh_background.dart';
 import '../theme.dart';
 import '../services/api_service.dart';
+import '../widgets/logo_widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -65,23 +66,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             // Header
                             Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Hello, Runner!',
-                                        style: GoogleFonts.lexend(
-                                            fontSize: 26,
-                                            fontWeight: FontWeight.bold,
-                                            color: AppTheme.primaryDark)),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      _user?['userName'] ?? 'Runner',
-                                      style: GoogleFonts.lexend(
-                                          fontSize: 14, color: Colors.grey.shade600),
-                                    ),
-                                  ],
-                                ),
+                                const LogoWidget(logoWidth: 160),
                                 const Spacer(),
                                 GlassContainer(
                                   width: 48,
@@ -128,6 +115,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               desc: 'Update your company settings',
                               color: AppTheme.primaryDark,
                               route: '/setup',
+                            ),
+                            const SizedBox(height: 16),
+                            _actionCard(
+                              icon: Icons.leaderboard,
+                              title: 'Leaderboard',
+                              desc: 'Top runners by tokens earned',
+                              color: Color(0xFFFFD700),
+                              route: '/leaderboard',
                             ),
                           ],
                         ),

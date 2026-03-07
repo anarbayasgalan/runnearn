@@ -218,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Logo Image
-                        const LogoWidget(logoHeight: 80),
+                        const LogoWidget(logoWidth: 200),
                         const SizedBox(height: 48),
 
                         // Username

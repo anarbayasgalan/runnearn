@@ -104,8 +104,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                         const SizedBox(height: 8),
 
                         // Logo Image
-                        const LogoWidget(logoHeight: 80),
-                        const SizedBox(height: 48),
+                        const LogoWidget(logoWidth: 200),
+                        const SizedBox(height: 32),
 
                         // Username
                         _buildField(

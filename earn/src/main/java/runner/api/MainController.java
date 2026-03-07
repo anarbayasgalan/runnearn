@@ -3,8 +3,18 @@ package runner.api;
 import runner.request.*;
 import runner.db.Company;
 import runner.service.MainService;
+import runner.service.RedisService;
+import runner.repositories.TokenRepository;
+import runner.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -13,6 +23,15 @@ public class MainController {
 
     @Autowired
     private MainService service;
+
+    @Autowired
+    private RedisService redisService;
+
+    @Autowired
+    private TokenRepository tokenRepository;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @PostMapping("/registerUser")
     public RegisterRes registerUser(@RequestBody RegisterReq req) {
@@ -107,5 +126,43 @@ public class MainController {
     @GetMapping("/my-rewards")
     public java.util.List<GetTokenRes> getMyRewards() {
         return service.getMyRewards();
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            redisService.deleteSession(token);
+        }
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/leaderboard")
+    public List<Map<String, Object>> getLeaderboard() {
+        List<Object[]> rows = tokenRepository.findLeaderboard();
+        List<Map<String, Object>> result = new ArrayList<>();
+        int rank = 1;
+        for (Object[] row : rows) {
+            String userId = (String) row[0];
+            long count = (Long) row[1];
+
+            // Get display name (username/email) from User table
+            String displayName = userId;
+            try {
+                var user = userRepository.findById(userId);
+                if (user.isPresent())
+                    displayName = user.get().getUserName();
+            } catch (Exception ignored) {
+            }
+
+            Map<String, Object> entry = new LinkedHashMap<>();
+            entry.put("rank", rank++);
+            entry.put("userId", userId);
+            entry.put("displayName", displayName);
+            entry.put("tokenCount", count);
+            result.add(entry);
+        }
+        return result;
     }
 }

@@ -36,8 +36,9 @@ public class SecurityConfig {
                 // CSRF attacks exploit cookie-based sessions, which we don't use.
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/registerUser", "/api/login", "/api/login/social", "/api/public-key",
-                                "/api/forgot-password/**", "/api/challenges", "/api/tokens")
+                                "/api/forgot-password/**", "/api/challenges", "/api/tokens", "/api/leaderboard")
                         .permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
