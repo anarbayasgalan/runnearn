@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://localhost:8080/api';
+  static const String baseUrl = 'https://runnearn.onrender.com/api';
 
   // ── Session Management ──────────────────────────────────────────
   static Future<String?> getSession() async {
