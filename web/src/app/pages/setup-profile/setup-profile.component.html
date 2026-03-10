@@ -31,16 +31,7 @@
                 <p class="hint">Recommended: Square logo, max 2MB</p>
             </div>
 
-            <!-- Company Name -->
-            <div class="form-group">
-                <label for="companyName">Company Name</label>
-                <input type="text" id="companyName" formControlName="companyName" class="input-field"
-                    placeholder="Enter your business name">
-                <div *ngIf="setupForm.get('companyName')?.touched && setupForm.get('companyName')?.invalid"
-                    class="error-hint">
-                    Company name is required.
-                </div>
-            </div>
+
 
             <!-- Details -->
             <div class="form-group">

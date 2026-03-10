@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 
@@ -25,18 +25,11 @@ export class SetupProfileComponent implements OnInit {
     private location: Location
   ) {
     this.setupForm = this.fb.group({
-      companyName: ['', [Validators.required]],
       details: ['']
     });
   }
 
   ngOnInit() {
-    const state = window.history.state;
-    if (state && state['companyName']) {
-      this.setupForm.patchValue({
-        companyName: state['companyName']
-      });
-    }
   }
 
   onFileSelected(event: any) {
@@ -56,7 +49,6 @@ export class SetupProfileComponent implements OnInit {
     this.errorMsg = '';
 
     const payload = {
-      companyName: this.setupForm.get('companyName')?.value,
       details: this.setupForm.get('details')?.value,
       picture: this.base64Image
     };
