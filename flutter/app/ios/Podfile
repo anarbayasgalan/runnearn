@@ -6,11 +6,7 @@ platform :ios, '14.0'
 # CocoaPods analytics sends network stats synchronously affecting build performance.
 ENV['COCOAPODS_DISABLE_STATS'] = '1'
 
-project 'Runner', {
-  'Debug' => :debug,
-  'Release' => :release,
-  'Profile' => :profile,
-}
+
 
 def flutter_root
   generated_xcode_build_settings_path = File.expand_path(File.join('..', 'Flutter', 'Generated.xcconfig'), __FILE__)
@@ -28,7 +24,7 @@ end
 require File.expand_path(File.join('packages', 'flutter_tools', 'bin', 'podhelper'), flutter_root)
 
 target 'Runner' do
-  use_frameworks!
+  use_frameworks! :linkage => :static
   use_modular_headers!
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
@@ -40,5 +36,33 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+    end
+  end
+
+  # Patch scripts to prevent PhaseScriptExecution failure (rsync/codesign attribute issues)
+  scripts = [
+    "Pods/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh",
+    "Pods/Target Support Files/Pods-Runner/Pods-Runner-resources.sh"
+  ]
+  
+  scripts.each do |file_path|
+    if File.exist?(file_path)
+      contents = File.read(file_path)
+      # Remove problematic archive/attribute flags but KEEP recursive (-r)
+      # This is critical because --delete requires -r or -d
+      contents.gsub!(/rsync\s+[^\"\'\s]*\-[^\s]*a[^\s]*/, 'rsync -r')
+      contents.gsub!('rsync --delete -av', 'rsync --delete -rv')
+      contents.gsub!('rsync --delete -v', 'rsync --delete -rv')
+      contents.gsub!('rsync -avr', 'rsync -vr')
+      contents.gsub!('rsync -auv', 'rsync -uvr')
+      # Remove problematic codesign flags
+      contents.gsub!('--preserve-metadata=identifier,entitlements', '')
+      File.write(file_path, contents)
+    end
   end
 end
+
+# Ensure parallel signing is off to prevent race conditions
+ENV['COCOAPODS_PARALLEL_CODE_SIGN'] = 'false'
